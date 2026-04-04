@@ -1,7 +1,9 @@
 .DS_Store
 .env
 .venv
-.env_duck/
+.env_duck/*
+!.env_duck/
+!.env_duck/profiles.yml
 .pytest_cache/
 .ruff_cache/
 __pycache__/

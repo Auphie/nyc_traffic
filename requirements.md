@@ -73,23 +73,17 @@ Current linting approach:
 - `sqlfluff` checks SQL files under `etl/`
 - the SQL linter is configured to be dbt-ready, but uses the `jinja` templater for now because the dbt project files will land in a later ticket
 
-## Shared Parent-Level Assets
+## Runtime Defaults
 
-This project expects a few runtime assets to live in the parent directory:
+This project uses these default runtime paths:
 
-- `../nyc_tlc.duckdb`
-- `../profiles.yml`
+- `./nyc_tlc.duckdb`
+- `./.env_duck/profiles.yml`
 - `../logs/`
 
 Recommended environment variables:
 
 ```bash
-export DBT_DUCKDB_PATH="../nyc_tlc.duckdb"
-export DBT_PROFILES_DIR=".."
-```
-
-Copy the repo template into the parent folder when you are ready to use dbt:
-
-```bash
-cp profiles.example.yml ../profiles.yml
+export DBT_DUCKDB_PATH="$(pwd)/nyc_tlc.duckdb"
+export DBT_PROFILES_DIR="$(pwd)/.env_duck"
 ```

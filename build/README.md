@@ -5,7 +5,7 @@ This directory will hold the Python utilities that orchestrate the project.
 Planned responsibilities:
 
 - bootstrap DuckDB schemas and operational metadata
-- discover source files in AWS-hosted storage
+- discover source files from the local landing zone
 - run incremental raw-data ingestion
 - write structured logs and sample outputs
 - trigger dbt runs after raw loads complete
@@ -108,3 +108,5 @@ Current runtime expectation:
 - parquet trip files are downloaded locally under `data/`
 - discovery reads the local landing zone by default
 - source discovery no longer depends on anonymous S3 listing
+- the default DuckDB file lives at `./nyc_tlc.duckdb`
+- the default dbt profile lives at `./.env_duck/profiles.yml`
