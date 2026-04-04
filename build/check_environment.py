@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 try:
     from build.config import load_environment_settings, load_project_paths

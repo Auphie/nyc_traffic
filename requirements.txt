@@ -8,4 +8,6 @@ pyarrow
 pytest
 python-dotenv
 PyYAML
-
+ruff
+sqlfluff
+sqlfluff-templater-dbt

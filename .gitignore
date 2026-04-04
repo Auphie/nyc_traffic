@@ -4,6 +4,8 @@
 .env_duck/
 .pytest_cache/
 __pycache__/
+build/__pycache__/
+tests/__pycache__/
 *.py[cod]
 *.duckdb
 *.log

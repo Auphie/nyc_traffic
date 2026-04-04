@@ -18,7 +18,8 @@ The project currently includes:
 - Python dependency manifests for the `.env_duck` virtual environment,
 - parent-path configuration guidance for DuckDB and dbt profiles,
 - starter documentation and a small environment check script,
-- a DuckDB bootstrap command that creates the first operational schema and metadata table.
+- a DuckDB bootstrap command that creates the first operational schema and metadata table,
+- a pull request template and local lint commands for Python and SQL files.
 
 Actual ingestion, dbt models, and broader automated tests will land in the next tickets.
 
@@ -121,6 +122,27 @@ python -m build.bootstrap --duckdb-path ./dev_bootstrap.duckdb
 
 The bootstrap command is idempotent. Re-running it keeps existing schemas and tables in place and adds any missing metadata columns needed by later tickets.
 
+### 6. Run local quality checks
+
+After activating `.env_duck`, run:
+
+```bash
+make lint
+```
+
+You can also run the checks independently:
+
+```bash
+make lint-python
+make lint-sql
+```
+
+Linting details:
+
+- Python linting uses `ruff`
+- SQL linting uses `sqlfluff`
+- the SQL config is dbt-ready, but it currently uses the `jinja` templater until the dbt project lands in a later ticket
+
 ## AWS CLI Note
 
 The ingestion flow will depend on AWS CLI access to the TLC public data location. Install AWS CLI before running the later ingestion tickets.
@@ -174,6 +196,17 @@ Additional fields included now for future incremental loading:
 - `last_error`
 
 See [build/README.md](/Users/LED/Code/Github/Auphie/nyc_traffic/build/README.md) for the operational layer notes.
+
+## Contribution Workflow
+
+This repo now includes a pull request template at [.github/PULL_REQUEST_TEMPLATE.md](/Users/LED/Code/Github/Auphie/nyc_traffic/.github/PULL_REQUEST_TEMPLATE.md).
+
+Use it to capture:
+
+- the ticket summary
+- the main code or config changes
+- the validation commands you ran
+- any risks, gaps, or follow-up work
 
 ## What Comes Next
 
