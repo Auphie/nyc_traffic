@@ -28,7 +28,7 @@ download-tlc:
 	$(RUN_PYTHON) -m build.download_from_tlc_incremental $(DOWNLOAD_ARGS)
 
 discover-sources:
-	$(RUN_PYTHON) -m build.source_discovery
+	$(RUN_PYTHON) -m build.source_discovery $(DOWNLOAD_ARGS)
 
 test:
 	$(RUN_PYTHON) -m unittest discover -s tests -p 'test_*.py'
