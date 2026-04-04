@@ -1,0 +1,35 @@
+name: CI Style Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  style-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Lint Python
+        run: python -m ruff check build tests
+
+      - name: Lint SQL
+        run: python -m sqlfluff lint etl
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -p 'test_*.py'

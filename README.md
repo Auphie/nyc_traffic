@@ -143,6 +143,8 @@ Linting details:
 - SQL linting uses `sqlfluff`
 - the SQL config is dbt-ready, but it currently uses the `jinja` templater until the dbt project lands in a later ticket
 
+The repository also runs the same style checks in GitHub Actions through `.github/workflows/ci_style_check.yml` on pushes to `main` and on pull requests.
+
 ## AWS CLI Note
 
 The ingestion flow will depend on AWS CLI access to the TLC public data location. Install AWS CLI before running the later ingestion tickets.
