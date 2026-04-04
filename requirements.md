@@ -22,6 +22,9 @@ Package summary:
 - `pytest`: unit and integration test runner
 - `python-dotenv`: optional local environment variable loading for Python utilities
 - `PyYAML`: YAML parsing for future config helpers
+- `ruff`: fast Python linting
+- `sqlfluff`: SQL linter for DuckDB/dbt-style SQL
+- `sqlfluff-templater-dbt`: dbt-aware templating support for future dbt models
 
 ## AWS CLI
 
@@ -49,6 +52,27 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+## Local Quality Checks
+
+After installing dependencies and activating `.env_duck`, run:
+
+```bash
+make lint
+```
+
+Individual commands:
+
+```bash
+make lint-python
+make lint-sql
+```
+
+Current linting approach:
+
+- `ruff` checks the Python code in `build/` and `tests/`
+- `sqlfluff` checks SQL files under `etl/`
+- the SQL linter is configured to be dbt-ready, but uses the `jinja` templater for now because the dbt project files will land in a later ticket
+
 ## Shared Parent-Level Assets
 
 This project expects a few runtime assets to live in the parent directory:
@@ -69,4 +93,3 @@ Copy the repo template into the parent folder when you are ready to use dbt:
 ```bash
 cp profiles.example.yml ../profiles.yml
 ```
-
