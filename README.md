@@ -1,11 +1,11 @@
 # NYC Taxi & Limousine (TLC) Trip
 
-NYC Taxi & Limousine (TLC) Trip is a Python-first demo project for showing how to build a near-real-time analytics workflow with DuckDB, dbt, and NYC TLC trip data published in S3-compatible object storage.
+NYC Taxi & Limousine (TLC) Trip is a Python-first demo project for showing how to build a near-real-time analytics workflow with DuckDB, dbt, and NYC TLC trip data.
 
 For this project, "near-real-time" means:
 
-- polling the source bucket for newly published Parquet files,
-- loading new or changed files into DuckDB quickly,
+- downloading newly published TLC parquet files into a local landing zone,
+- detecting new or changed landed files quickly,
 - transforming them with dbt into analytics-ready tables.
 
 The TLC source data is published monthly with a delay, so this repo demonstrates low-latency ingestion after new files appear, not per-trip live event streaming.
@@ -17,10 +17,11 @@ The project currently includes:
 - base directory layout for Python jobs, dbt work, and tests,
 - Python dependency manifests for the `.env_duck` virtual environment,
 - parent-path configuration guidance for DuckDB and dbt profiles,
-- starter documentation and a small environment check script,
-- a DuckDB bootstrap command that creates the first operational schema and metadata table,
-- a pull request template and local lint commands for Python and SQL files,
-- local TLC download commands for full and incremental pulls plus a source discovery command that plans ingestion from landed files under `data/`.
+- a small environment check script plus operational DuckDB bootstrap and metadata setup,
+- local TLC download jobs for full backfill and current-month incremental pulls,
+- local source discovery and ingestion planning against landed files in `data/`,
+- local and CI style checks for Python and SQL files,
+- a pull request template for incremental feature PRs.
 
 Actual ingestion, dbt models, and broader automated tests will land in the next tickets.
 
@@ -57,30 +58,16 @@ The first four will be loaded incrementally. `taxi_zone_shape` will be handled a
 
 ## Local Setup
 
-### 1. Create the virtual environment
-
-```bash
-python3 -m venv .env_duck
-source .env_duck/bin/activate
-```
-
-Or use the Makefile:
+### 1. Create the virtual environment and install dependencies
 
 ```bash
 make install
 source .env_duck/bin/activate
 ```
 
-### 2. Install Python packages
+See [requirements.md](/Users/LED/Code/Github/Auphie/nyc_traffic/requirements.md) for package details and tooling notes.
 
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-See [requirements.md](/Users/LED/Code/Github/Auphie/nyc_traffic/requirements.md) for package details.
-
-### 3. Configure parent-level shared paths
+### 2. Configure parent-level shared paths
 
 This project intentionally keeps its shared runtime assets one level above the repo:
 
@@ -97,41 +84,30 @@ export DBT_PROFILES_DIR=".."
 
 Create `../profiles.yml` by copying the template from [profiles.example.yml](/Users/LED/Code/Github/Auphie/nyc_traffic/profiles.example.yml).
 
-### 4. Validate the local setup
-
-Run the lightweight checker:
+### 3. Validate the local setup
 
 ```bash
-python -m build.check_environment
+make check-env
 ```
 
 The checker reports which expected files, directories, and environment variables are already in place.
 
-### 5. Bootstrap the operational DuckDB layer
-
-Create the initial schemas and metadata table:
+### 4. Bootstrap the operational DuckDB layer
 
 ```bash
-python -m build.bootstrap
-```
-
-If you want to test against a scratch database before using the shared parent path:
-
-```bash
-python -m build.bootstrap --duckdb-path ./dev_bootstrap.duckdb
+make bootstrap
 ```
 
 The bootstrap command is idempotent. Re-running it keeps existing schemas and tables in place and adds any missing metadata columns needed by later tickets.
 
-### 6. Download TLC parquet files into the local landing zone
+### 5. Download TLC parquet files into the local landing zone
 
 There are now two user-facing download modes built on shared internal download helpers.
 
 Full backfill for a month range:
 
 ```bash
-python -m build.download_from_tlc_full --start-month 2025-01 --end-month 2025-03
-make download-tlc-full START_MONTH=2025-01 END_MONTH=2025-03
+make download-tlc-full START_MONTH=2020-01 END_MONTH=2026-02
 ```
 
 If you run `make download-tlc-full` without `START_MONTH` and `END_MONTH`, the script will prompt for them interactively using `YYYY-MM`.
@@ -139,25 +115,21 @@ If you run `make download-tlc-full` without `START_MONTH` and `END_MONTH`, the s
 Optional table filter:
 
 ```bash
-python -m build.download_from_tlc_full \
-  --table yellow_trips \
-  --table green_trips \
-  --start-month 2025-01 \
-  --end-month 2025-03
+make download-tlc-full START_MONTH=2025-01 END_MONTH=2025-03 \
+  DOWNLOAD_ARGS="--table yellow_trips --table green_trips"
 ```
 
 Incremental download for the current system month:
 
 ```bash
-python -m build.download_from_tlc_incremental
 make download-tlc
 ```
 
 Optional table filter or month override:
 
 ```bash
-python -m build.download_from_tlc_incremental --table yellow_trips
-python -m build.download_from_tlc_incremental --month 2025-02
+make download-tlc DOWNLOAD_ARGS="--table yellow_trips"
+make download-tlc DOWNLOAD_ARGS="--month 2025-02"
 ```
 
 These downloaders use the public TLC CloudFront parquet URLs and write files into `data/`, which is intentionally ignored by Git.
@@ -166,30 +138,28 @@ If the incremental download returns an HTTP 403 or 404 for the current system mo
 
 - [TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 
-### 7. Discover source files and plan ingestion
-
-Generate a discovery plan from the local landing zone:
+### 6. Discover source files and plan ingestion
 
 ```bash
-python -m build.source_discovery
+make discover-sources
 ```
 
 By default, discovery reads from `./data`. You can limit the plan to one table:
 
 ```bash
-python -m build.source_discovery --table yellow_trips
+make discover-sources DOWNLOAD_ARGS="--table yellow_trips"
 ```
 
 Point discovery at a different local landing directory:
 
 ```bash
-python -m build.source_discovery --data-dir ./data
+make discover-sources DOWNLOAD_ARGS="--data-dir ./data"
 ```
 
 Render the plan as JSON:
 
 ```bash
-python -m build.source_discovery --output json
+make discover-sources DOWNLOAD_ARGS="--output json"
 ```
 
 Current source rules:
@@ -202,9 +172,7 @@ Current source rules:
 
 Discovery compares local source objects to `ops.source_metadata` and labels each object as `new`, `unchanged`, or `reload`.
 
-### 8. Run local quality checks
-
-After activating `.env_duck`, run:
+### 7. Run local quality checks
 
 ```bash
 make lint
@@ -227,7 +195,7 @@ The repository also runs the same style checks in GitHub Actions through `.githu
 
 ## AWS CLI Note
 
-The ingestion flow will depend on AWS CLI access to the TLC public data location. Install AWS CLI before running the later ingestion tickets.
+AWS CLI remains installed in this project because later tickets may still need it for optional S3 workflows or alternative landing-zone patterns. The current download and discovery flow in this repo does not depend on AWS CLI.
 
 For example:
 
