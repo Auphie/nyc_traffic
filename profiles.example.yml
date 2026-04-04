@@ -1,0 +1,9 @@
+dbt_nyc_traffic:
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'dev.duckdb') }}"
+      schema: dev
+      threads: 4
+  target: dev
+

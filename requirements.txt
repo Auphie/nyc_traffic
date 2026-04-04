@@ -1,0 +1,11 @@
+awscli
+dbt-core
+dbt-duckdb
+duckdb
+duckdb-cli
+pandas
+pyarrow
+pytest
+python-dotenv
+PyYAML
+
