@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 import os
+from pathlib import Path
 import sys
 
-from config import load_environment_settings, load_project_paths
+try:
+    from build.config import load_environment_settings, load_project_paths
+except ImportError:  # pragma: no cover - supports direct script execution
+    from config import load_environment_settings, load_project_paths
 
 
 def _status_line(label: str, ok: bool, detail: str) -> str:
@@ -67,4 +70,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

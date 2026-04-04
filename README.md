@@ -12,14 +12,15 @@ The TLC source data is published monthly with a delay, so this repo demonstrates
 
 ## Current Scope
 
-This first PR lays down the project scaffold:
+The project currently includes:
 
 - base directory layout for Python jobs, dbt work, and tests,
 - Python dependency manifests for the `.env_duck` virtual environment,
 - parent-path configuration guidance for DuckDB and dbt profiles,
-- starter documentation and a small environment check script.
+- starter documentation and a small environment check script,
+- a DuckDB bootstrap command that creates the first operational schema and metadata table.
 
-Actual ingestion, operational metadata tables, dbt models, and automated tests will land in the next tickets.
+Actual ingestion, dbt models, and broader automated tests will land in the next tickets.
 
 ## Planned Project Layout
 
@@ -99,10 +100,26 @@ Create `../profiles.yml` by copying the template from [profiles.example.yml](/Us
 Run the lightweight checker:
 
 ```bash
-python build/check_environment.py
+python -m build.check_environment
 ```
 
 The checker reports which expected files, directories, and environment variables are already in place.
+
+### 5. Bootstrap the operational DuckDB layer
+
+Create the initial schemas and metadata table:
+
+```bash
+python -m build.bootstrap
+```
+
+If you want to test against a scratch database before using the shared parent path:
+
+```bash
+python -m build.bootstrap --duckdb-path ./dev_bootstrap.duckdb
+```
+
+The bootstrap command is idempotent. Re-running it keeps existing schemas and tables in place and adds any missing metadata columns needed by later tickets.
 
 ## AWS CLI Note
 
@@ -133,14 +150,37 @@ dbt_nyc_traffic:
 
 The real file should live at `../profiles.yml` so this repo does not depend on machine-specific global dbt configuration.
 
+## Operational Metadata
+
+The first operational table is `ops.source_metadata`. It is designed to support future idempotent ingestion and auditing.
+
+Required fields:
+
+- `table_name`
+- `source_name`
+- `created_at`
+- `updated_at`
+
+Additional fields included now for future incremental loading:
+
+- `object_key`
+- `source_month`
+- `source_etag`
+- `source_last_modified_at`
+- `load_status`
+- `batch_id`
+- `row_count`
+- `last_loaded_at`
+- `last_error`
+
+See [build/README.md](/Users/LED/Code/Github/Auphie/nyc_traffic/build/README.md) for the operational layer notes.
+
 ## What Comes Next
 
 The next tickets will add:
 
-1. DuckDB bootstrap code and `ops.source_metadata`
-2. source discovery and ingestion planning
-3. incremental raw loaders
-4. logging and sample capture
-5. dbt sources, staging, and marts
-6. pytest and dbt test coverage
-
+1. source discovery and ingestion planning
+2. incremental raw loaders
+3. logging and sample capture
+4. dbt sources, staging, and marts
+5. pytest and dbt test coverage

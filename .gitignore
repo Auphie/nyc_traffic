@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.venv
+.env_duck/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.duckdb
+*.log
+
+# dbt artifacts
+dbt_packages/
+logs/
+target/
