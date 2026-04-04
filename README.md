@@ -16,7 +16,7 @@ The project currently includes:
 
 - base directory layout for Python jobs, dbt work, and tests,
 - Python dependency manifests for the `.env_duck` virtual environment,
-- parent-path configuration guidance for DuckDB and dbt profiles,
+- repo-local guidance for DuckDB and dbt profile defaults,
 - a small environment check script plus operational DuckDB bootstrap and metadata setup,
 - local TLC download jobs for full backfill and current-month incremental pulls,
 - local source discovery and ingestion planning against landed files in `data/`,
@@ -65,24 +65,24 @@ make install
 source .env_duck/bin/activate
 ```
 
-See [requirements.md](/Users/LED/Code/Github/Auphie/nyc_traffic/requirements.md) for package details and tooling notes.
+See [requirements.md](requirements.md) for package details and tooling notes.
 
-### 2. Configure parent-level shared paths
+### 2. Review the default runtime paths
 
-This project intentionally keeps its shared runtime assets one level above the repo:
+By default, this project keeps the main DuckDB file and dbt profile inside the repo, while logs stay one level above the repo:
 
-- DuckDB database: `../nyc_tlc.duckdb`
-- dbt profile: `../profiles.yml`
+- DuckDB database: `./nyc_tlc.duckdb`
+- dbt profile: `./.env_duck/profiles.yml`
 - logs directory: `../logs/`
 
-Recommended shell exports:
+Optional shell overrides:
 
 ```bash
-export DBT_DUCKDB_PATH="../nyc_tlc.duckdb"
-export DBT_PROFILES_DIR=".."
+export DBT_DUCKDB_PATH="$(pwd)/nyc_tlc.duckdb"
+export DBT_PROFILES_DIR="$(pwd)/.env_duck"
 ```
 
-Create `../profiles.yml` by copying the template from [profiles.example.yml](/Users/LED/Code/Github/Auphie/nyc_traffic/profiles.example.yml).
+The repository expects the dbt profile at [`.env_duck/profiles.yml`](.env_duck/profiles.yml). Export the variables above only if you want to override the defaults.
 
 ### 3. Validate the local setup
 
@@ -178,6 +178,22 @@ Discovery compares local source objects to `ops.source_metadata` and labels each
 make lint
 ```
 
+### 8. Run dbt from the repo root
+
+Use the built-in `make` targets so you do not have to remember the dbt project or profile paths:
+
+```bash
+make dbt-debug
+make dbt-run
+```
+
+You can pass extra dbt flags through `DBT_ARGS`:
+
+```bash
+make dbt-run DBT_ARGS="--select example"
+make dbt-test DBT_ARGS="--select example"
+```
+
 You can also run the checks independently:
 
 ```bash
@@ -203,7 +219,7 @@ For example:
 aws --version
 ```
 
-If AWS CLI is not installed yet, follow the install guide in [requirements.md](/Users/LED/Code/Github/Auphie/nyc_traffic/requirements.md).
+If AWS CLI is not installed yet, follow the install guide in [requirements.md](requirements.md).
 
 ## dbt Profile Template
 
@@ -220,7 +236,7 @@ dbt_nyc_traffic:
   target: dev
 ```
 
-The real file should live at `../profiles.yml` so this repo does not depend on machine-specific global dbt configuration.
+The tracked project profile now lives at [`.env_duck/profiles.yml`](.env_duck/profiles.yml) so the repo does not depend on machine-specific global dbt configuration.
 
 ## Operational Metadata
 
@@ -247,11 +263,11 @@ Additional fields included now for future incremental loading:
 
 Those metadata fields are now used by the source discovery planner to classify incoming source objects before raw ingestion is implemented.
 
-See [build/README.md](/Users/LED/Code/Github/Auphie/nyc_traffic/build/README.md) for the operational layer notes.
+See [build/README.md](build/README.md) for the operational layer notes.
 
 ## Contribution Workflow
 
-This repo now includes a pull request template at [.github/PULL_REQUEST_TEMPLATE.md](/Users/LED/Code/Github/Auphie/nyc_traffic/.github/PULL_REQUEST_TEMPLATE.md).
+This repo now includes a pull request template at [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
 
 Use it to capture:
 

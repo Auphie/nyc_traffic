@@ -6,9 +6,19 @@ import sys
 from pathlib import Path
 
 try:
-    from build.config import load_environment_settings, load_project_paths
+    from build.config import (
+        load_environment_settings,
+        load_project_paths,
+        resolve_duckdb_path,
+        resolve_profiles_dir,
+    )
 except ImportError:  # pragma: no cover - supports direct script execution
-    from config import load_environment_settings, load_project_paths
+    from config import (
+        load_environment_settings,
+        load_project_paths,
+        resolve_duckdb_path,
+        resolve_profiles_dir,
+    )
 
 
 def _status_line(label: str, ok: bool, detail: str) -> str:
@@ -18,6 +28,16 @@ def _status_line(label: str, ok: bool, detail: str) -> str:
 
 def _path_exists(path: Path) -> tuple[bool, str]:
     return path.exists(), str(path)
+
+
+def _env_path_status(env_name: str, resolved_path: Path, raw_value: str) -> tuple[bool, str]:
+    if env_name in os.environ:
+        return True, f"{raw_value} (from environment)"
+
+    if resolved_path.exists():
+        return True, f"{raw_value} (default)"
+
+    return False, raw_value
 
 
 def main() -> int:
@@ -33,6 +53,8 @@ def main() -> int:
 
     project_paths = load_project_paths()
     env_settings = load_environment_settings()
+    resolved_duckdb_path = resolve_duckdb_path()
+    resolved_profiles_dir = resolve_profiles_dir()
 
     checks = [
         ("Repo root", True, str(project_paths.root_dir)),
@@ -42,13 +64,19 @@ def main() -> int:
         ("Logs directory", *_path_exists(project_paths.logs_dir)),
         (
             "DBT_DUCKDB_PATH",
-            "DBT_DUCKDB_PATH" in os.environ,
-            env_settings.dbt_duckdb_path,
+            *_env_path_status(
+                "DBT_DUCKDB_PATH",
+                resolved_duckdb_path,
+                env_settings.dbt_duckdb_path,
+            ),
         ),
         (
             "DBT_PROFILES_DIR",
-            "DBT_PROFILES_DIR" in os.environ,
-            env_settings.dbt_profiles_dir,
+            *_env_path_status(
+                "DBT_PROFILES_DIR",
+                resolved_profiles_dir,
+                env_settings.dbt_profiles_dir,
+            ),
         ),
     ]
 
@@ -61,8 +89,8 @@ def main() -> int:
     if missing:
         print("")
         print("Next steps:")
-        print("- Copy profiles.example.yml to ../profiles.yml")
-        print("- Export DBT_DUCKDB_PATH and DBT_PROFILES_DIR")
+        print("- Create .env_duck/profiles.yml if it does not exist")
+        print("- Export DBT_DUCKDB_PATH and DBT_PROFILES_DIR only if you need overrides")
         print("- Create ../logs/ if it does not exist")
 
     return 1 if args.strict and missing else 0
