@@ -1,14 +1,25 @@
-Welcome to your new dbt project!
+# etl/dbt/
 
-### Using the starter project
+This is the dbt project for the NYC TLC scenario-1 demo.
 
-Try running the following commands:
-- dbt run
+Current flow:
 
+1. `make dbt-seed` loads the taxi-zone lookup CSV into DuckDB.
+2. `make dbt-run` builds staging views directly from local TLC parquet files with DuckDB `read_parquet(...)`.
+3. `make dbt-run` also materializes analytics tables for downstream reads.
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+Current model layout:
+
+- `seeds/taxi_zone_lookup.csv` loads the taxi zone reference table
+- `models/staging/` holds the parquet-backed trip staging views plus `stg_taxi_zone_lookup`
+- `models/core/` holds shared dimensional tables and lightweight core facts such as `dim_taxi_zone` and `fct_taxi_core_info`
+- `models/analytics/` holds BI-facing fact and summary tables such as `fct_trip_activity_monthly` and `fct_hourly_taxi_core_stats`
+
+Useful commands:
+
+```bash
+make dbt-debug
+make dbt-seed
+make dbt-run
+make dbt-test
+```

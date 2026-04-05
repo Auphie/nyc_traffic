@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_total_count
+    description: "Lightweight staging view that counts raw landed parquet records by service type and source month."
+    columns:
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the landed TLC parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category used for row counting."
+      - name: record_count
+        data_type: integer
+        description: "Per-row counter used so downstream models can aggregate landed record totals."

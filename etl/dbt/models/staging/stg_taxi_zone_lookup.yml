@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_taxi_zone_lookup
+    description: "Staging view over the seeded TLC taxi zone lookup table used to decode pickup and drop-off location identifiers."
+    columns:
+      - name: location_id
+        data_type: integer
+        description: "Taxi Zone identifier used throughout TLC trip records for pickup and drop-off joins."
+      - name: borough
+        data_type: varchar
+        description: "New York City borough or area associated with the taxi zone."
+      - name: zone_name
+        data_type: varchar
+        description: "Human-readable taxi zone name."
+      - name: service_zone
+        data_type: varchar
+        description: "TLC service-zone grouping used by the lookup reference."

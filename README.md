@@ -21,7 +21,9 @@ The project currently includes:
 - local TLC download jobs for full backfill and current-month incremental pulls,
 - local source discovery and ingestion planning against landed files in `data/`,
 - a scenario-1 dbt flow that reads parquet files directly in staging models with DuckDB `read_parquet(...)`,
-- a light analytics table in the `analytics` schema built from those staging models,
+- a seeded taxi-zone lookup that lands in DuckDB before the dbt model build,
+- a `core` dimension layer for shared reference models such as taxi zones,
+- light analytics tables in the `analytics` schema built from staging models,
 - a build-to-prod DuckDB swap command so dbt writes to a build database while visual tools read a separate production database,
 - scaffold directories for future Airflow orchestration and Streamlit serving layers,
 - local and CI style checks for Python and SQL files,
@@ -188,7 +190,15 @@ Current source rules:
 
 Discovery compares local source objects to `ops.source_metadata` and labels each object as `new`, `unchanged`, or `reload`.
 
-### 7. Build the dbt ELT layers
+### 7. Seed the taxi zone lookup table
+
+```bash
+make dbt-seed
+```
+
+This loads [`etl/dbt/seeds/taxi_zone_lookup.csv`](/Users/LED/Code/Github/Auphie/nyc_traffic/etl/dbt/seeds/taxi_zone_lookup.csv) into the DuckDB `staging` schema as `staging.taxi_zone_lookup`.
+
+### 8. Build the dbt ELT layers
 
 ```bash
 make dbt-run
@@ -198,13 +208,17 @@ make dbt-test
 This materializes into the build database:
 
 - `staging.stg_fhv_trips`, `staging.stg_fhvhv_trips`, `staging.stg_green_trips`, and `staging.stg_yellow_trips`
-- `analytics.analytics_trip_activity_monthly`
+- `staging.stg_taxi_zone_lookup`
+- `core.dim_taxi_zone`
+- `core.fct_taxi_core_info`
+- `analytics.fct_trip_activity_monthly`
+- `analytics.fct_hourly_taxi_core_stats`
 
-Each staging model explicitly uses DuckDB `read_parquet(...)` against the local landed TLC files, adds `source_file_name` and `source_month`, and applies only light cleanup filters. `analytics.analytics_trip_activity_monthly` is then materialized from those staging models for downstream BI reads.
+Each trip staging model explicitly uses DuckDB `read_parquet(...)` against the local landed TLC files, adds `source_file_name` and `source_month`, and applies only light cleanup filters. The taxi-zone staging view normalizes the seeded lookup table for location joins. The core layer now includes `core.dim_taxi_zone` and the lightweight `core.fct_taxi_core_info` view for fast downstream modeling, while the analytics layer materializes `analytics.fct_trip_activity_monthly` and `analytics.fct_hourly_taxi_core_stats` for downstream BI reads.
 
 `make dbt-test` is available for a very small local test surface and currently checks only the core staging timestamp fields for `not_null`.
 
-### 8. Promote the build database to production
+### 9. Promote the build database to production
 
 ```bash
 make swap-duckdb
@@ -214,7 +228,7 @@ This command performs an atomic `os.replace()` from `build.duckdb` to `prod.duck
 
 Visual tools should point at `prod.duckdb`, while dbt continues to write to `build.duckdb`.
 
-### 9. Run local quality checks
+### 10. Run local quality checks
 
 ```bash
 make lint
@@ -231,6 +245,7 @@ You can also inspect the dbt connection or narrow the model selection:
 
 ```bash
 make dbt-debug
+make dbt-seed DBT_ARGS="--select taxi_zone_lookup"
 make dbt-run DBT_ARGS="--select stg_yellow_trips"
 make dbt-test DBT_ARGS="--select stg_yellow_trips"
 ```

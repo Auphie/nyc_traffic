@@ -1,0 +1,43 @@
+version: 2
+
+sources:
+  - name: web_download
+    description: >
+      TLC trip record files downloaded from the NYC TLC trip records page with
+      `make download-tlc` or `make download-tlc-full`, then read locally by dbt.
+      According to the TLC trip record user guide, each row in the trip datasets
+      represents one trip made by a TLC-licensed vehicle.
+    loader: build.download_from_tlc
+    tags: ["Scenario1", "LocalParquet"]
+    database: build
+    schema: staging
+    tables:
+      - name: stg_fhv_trips
+        description: >
+          For-hire vehicle trip records dispatched by TLC-licensed FHV bases.
+          The TLC began receiving FHV trip data in 2015, initially with dispatching
+          base, pickup datetime, and pickup location, and later expanded the fields
+          to include drop-off details and shared-ride information.
+      - name: stg_fhvhv_trips
+        description: >
+          High-volume for-hire vehicle trip records for companies operating at
+          10,000 or more trips per day through their bases. The TLC user guide
+          notes that this license class adds reporting fields that create closer
+          parity with taxi trip data, including fare and trip-detail metrics.
+      - name: stg_green_trips
+        description: >
+          Green taxi trip records for boro taxis and street-hail liveries introduced
+          in 2013 to improve service in the boroughs and upper Manhattan. The data
+          includes trip times, pickup and drop-off locations, trip distance,
+          itemized fares, payment types, and passenger counts.
+      - name: stg_yellow_trips
+        description: >
+          Yellow taxi trip records for New York City's medallion taxis. The TLC
+          user guide describes these records as including pickup and drop-off
+          timestamps and locations, trip distance, itemized fares, rate types,
+          payment types, and driver-reported passenger counts.
+      - name: stg_taxi_zone_lookup
+        description: >
+          Taxi zone lookup reference staged from the seeded `taxi_zone_lookup.csv`
+          file. It maps TLC `LocationID` values to borough, taxi zone, and
+          service-zone labels for downstream joins and dashboard-friendly names.

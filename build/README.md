@@ -65,6 +65,7 @@ python -m build.source_discovery --output json
 The bootstrap flow currently creates:
 
 - `staging` schema for normalized staging views
+- `core` schema for shared dimensional tables
 - `analytics` schema for downstream marts and summaries
 - `ops` schema for operational metadata
 - `ops.source_metadata` for source-file tracking and future incremental orchestration

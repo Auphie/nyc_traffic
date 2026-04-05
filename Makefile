@@ -14,7 +14,7 @@ DBT_DUCKDB_PATH ?= $(BUILD_DUCKDB_PATH)
 TLC_DATA_DIR ?= $(CURDIR)/data
 DBT_ARGS ?=
 
-.PHONY: venv install check-env bootstrap download-tlc-full download-tlc discover-sources test lint lint-python lint-sql dbt-debug dbt-run dbt-test swap-duckdb
+.PHONY: venv install check-env bootstrap download-tlc-full download-tlc discover-sources test lint lint-python lint-sql dbt-debug dbt-seed dbt-run dbt-test swap-duckdb
 
 venv:
 	$(PYTHON) -m venv $(VENV_DIR)
@@ -51,6 +51,9 @@ lint-sql:
 
 dbt-debug:
 	DBT_DUCKDB_PATH="$(DBT_DUCKDB_PATH)" TLC_DATA_DIR="$(TLC_DATA_DIR)" $(RUN_DBT) debug --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR) $(DBT_ARGS)
+
+dbt-seed:
+	DBT_DUCKDB_PATH="$(DBT_DUCKDB_PATH)" TLC_DATA_DIR="$(TLC_DATA_DIR)" $(RUN_DBT) seed --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR) $(DBT_ARGS)
 
 dbt-run:
 	DBT_DUCKDB_PATH="$(DBT_DUCKDB_PATH)" TLC_DATA_DIR="$(TLC_DATA_DIR)" $(RUN_DBT) run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR) $(DBT_ARGS)

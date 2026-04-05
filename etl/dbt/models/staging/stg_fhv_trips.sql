@@ -21,10 +21,11 @@ validated as (
     select *
     from normalized
     where
-        (pickup_at is null or dropoff_at is null or dropoff_at >= pickup_at)
-        and (pickup_location_id is null or pickup_location_id >= 0)
-        and (dropoff_location_id is null or dropoff_location_id >= 0)
-        and (sr_flag is null or sr_flag >= 0)
+        pickup_at is not null
+        and dropoff_at is not null
+        and dropoff_at >= pickup_at
+        and pickup_location_id is not null
+        and dropoff_location_id is not null
 )
 
 select *

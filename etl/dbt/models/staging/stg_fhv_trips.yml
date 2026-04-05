@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_fhv_trips
+    description: "Staging view for landed FHV trip parquet files, with canonical column names mapped from the TLC FHV trip data dictionary."
+    columns:
+      - name: source_file_name
+        data_type: varchar
+        description: "Original parquet file name read from the local landing zone."
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the TLC parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category for this staging model."
+      - name: dispatching_base_num
+        data_type: varchar
+        description: "TLC base license number of the base that dispatched the trip."
+      - name: affiliated_base_number
+        data_type: varchar
+        description: "Base number of the affiliated base for the vehicle, even when it is the same as the dispatching base."
+      - name: pickup_at
+        data_type: timestamp
+        description: "Date and time of the trip pick-up, mapped from `pickup_datetime`."
+        data_tests:
+          - not_null
+      - name: dropoff_at
+        data_type: timestamp
+        description: "Date and time of the trip drop-off, mapped from `dropOff_datetime`."
+        data_tests:
+          - not_null
+      - name: pickup_location_id
+        data_type: bigint
+        description: "TLC Taxi Zone identifier where the trip began, mapped from `PUlocationID`."
+      - name: dropoff_location_id
+        data_type: bigint
+        description: "TLC Taxi Zone identifier where the trip ended, mapped from `DOlocationID`."
+      - name: sr_flag
+        data_type: bigint
+        description: "Shared-ride chain indicator. A value of 1 means the trip was part of a shared ride chain; non-shared rides are null in the source."
