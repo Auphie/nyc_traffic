@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: dim_taxi_zone
+    description: "Taxi zone dimension built from the seeded TLC zone lookup table for downstream joins and dashboard labels."
+    columns:
+      - name: location_id
+        data_type: integer
+        description: "Taxi Zone identifier used in TLC trip records."
+      - name: borough
+        data_type: varchar
+        description: "Borough or area associated with the taxi zone."
+      - name: zone_name
+        data_type: varchar
+        description: "Human-readable taxi zone name."
+      - name: service_zone
+        data_type: varchar
+        description: "Higher-level TLC service-zone grouping for the taxi zone."

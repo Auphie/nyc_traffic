@@ -15,6 +15,7 @@ except ImportError:  # pragma: no cover - supports direct script execution
 
 SCHEMA_STATEMENTS = (
     "create schema if not exists staging;",
+    "create schema if not exists core;",
     "create schema if not exists analytics;",
     "create schema if not exists ops;",
 )
@@ -71,7 +72,7 @@ def bootstrap_duckdb(path_override: str | Path | None = None) -> BootstrapResult
 
     return BootstrapResult(
         database_path=database_path,
-        schemas=("staging", "analytics", "ops"),
+        schemas=("staging", "core", "analytics", "ops"),
         source_metadata_columns=columns,
     )
 

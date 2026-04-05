@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: analytics_trip_activity_monthly
-    description: "Monthly trip activity summary across the four TLC service types derived directly from the staging layer."
+  - name: fct_trip_activity_monthly
+    description: "Monthly trip activity fact table across the four TLC service types derived directly from the staging layer."
     columns:
       - name: service_type
         data_type: varchar

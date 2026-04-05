@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: stg_green_trips
+    description: "Staging view for landed green taxi trip parquet files, with canonical column names mapped from the TLC green trip data dictionary."
+    columns:
+      - name: source_file_name
+        data_type: varchar
+        description: "Original parquet file name read from the local landing zone."
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the TLC parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category for this staging model."
+      - name: vendor_id
+        data_type: integer
+        description: "Code indicating the LPEP provider that supplied the trip record."
+      - name: pickup_at
+        data_type: timestamp
+        description: "Date and time when the meter was engaged, mapped from `lpep_pickup_datetime`."
+        data_tests:
+          - not_null
+      - name: dropoff_at
+        data_type: timestamp
+        description: "Date and time when the meter was disengaged, mapped from `lpep_dropoff_datetime`."
+        data_tests:
+          - not_null
+      - name: store_and_fwd_flag
+        data_type: varchar
+        description: "Indicator showing whether the trip record was held in vehicle memory before being sent to the vendor."
+      - name: rate_code_id
+        data_type: bigint
+        description: "Final rate code in effect at the end of the trip, mapped from `RatecodeID`."
+      - name: pickup_location_id
+        data_type: integer
+        description: "TLC Taxi Zone identifier where the meter was engaged, mapped from `PULocationID`."
+      - name: dropoff_location_id
+        data_type: integer
+        description: "TLC Taxi Zone identifier where the meter was disengaged, mapped from `DOLocationID`."
+      - name: passenger_count
+        data_type: bigint
+        description: "Number of passengers in the vehicle."
+      - name: trip_distance
+        data_type: double
+        description: "Elapsed trip distance in miles reported by the taximeter."
+      - name: fare_amount
+        data_type: double
+        description: "Time-and-distance fare calculated by the meter."
+      - name: extra_amount
+        data_type: double
+        description: "Miscellaneous extras and surcharges, mapped from `extra`."
+      - name: mta_tax
+        data_type: double
+        description: "Tax automatically triggered based on the metered rate in use."
+      - name: tip_amount
+        data_type: double
+        description: "Tip amount automatically populated for credit-card tips; cash tips are not included."
+      - name: tolls_amount
+        data_type: double
+        description: "Total amount of all tolls paid during the trip."
+      - name: ehail_fee
+        data_type: double
+        description: "E-hail fee amount when present in the source record."
+      - name: improvement_surcharge
+        data_type: double
+        description: "Improvement surcharge assessed at flag drop."
+      - name: total_amount
+        data_type: double
+        description: "Total amount charged to passengers, excluding cash tips."
+      - name: payment_type
+        data_type: bigint
+        description: "Numeric code showing how the passenger paid for the trip."
+      - name: trip_type
+        data_type: bigint
+        description: "Code indicating whether the trip was a street-hail or dispatch trip."
+      - name: congestion_surcharge
+        data_type: double
+        description: "Total amount collected during the trip for the New York State congestion surcharge."
+      - name: cbd_congestion_fee
+        data_type: double
+        description: "Per-trip charge for the MTA Congestion Relief Zone, effective January 5, 2025."

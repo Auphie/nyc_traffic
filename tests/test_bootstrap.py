@@ -26,6 +26,7 @@ class BootstrapDuckdbTests(unittest.TestCase):
                     ).fetchall()
                 }
                 self.assertIn("staging", schemata)
+                self.assertIn("core", schemata)
                 self.assertIn("analytics", schemata)
                 self.assertIn("ops", schemata)
 
