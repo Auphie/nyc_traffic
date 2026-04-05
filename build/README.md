@@ -11,6 +11,12 @@ Current responsibilities:
 - write structured logs and sample outputs
 - trigger dbt runs after local file discovery completes
 
+Boundary with future directories:
+
+- `build/` contains reusable Python logic
+- `airflow/` should call into `build/`, not replace it
+- `streamlit/` should consume outputs from DuckDB, not perform orchestration
+
 ## Current Commands
 
 ### Environment check
