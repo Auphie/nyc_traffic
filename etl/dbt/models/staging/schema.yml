@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: stg_fhv_trips
+    description: "Staging view for all landed FHV trip parquet files, normalized to canonical timestamp and location column names."
+    columns:
+      - name: source_file_name
+        data_type: varchar
+        description: "Original parquet file name read directly from the landed local file set."
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the source parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category."
+      - name: pickup_at
+        data_type: timestamp
+        description: "Trip pickup timestamp."
+        data_tests:
+          - not_null
+      - name: dropoff_at
+        data_type: timestamp
+        description: "Trip dropoff timestamp."
+        data_tests:
+          - not_null
+      - name: pickup_location_id
+        data_type: bigint
+        description: "Pickup TLC taxi zone identifier when present."
+      - name: dropoff_location_id
+        data_type: bigint
+        description: "Dropoff TLC taxi zone identifier when present."
+
+  - name: stg_fhvhv_trips
+    description: "Staging view for all landed HVFHV trip parquet files with standardized metric and timestamp columns."
+    columns:
+      - name: source_file_name
+        data_type: varchar
+        description: "Original parquet file name read directly from the landed local file set."
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the source parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category."
+      - name: pickup_at
+        data_type: timestamp
+        description: "Trip pickup timestamp."
+        data_tests:
+          - not_null
+      - name: dropoff_at
+        data_type: timestamp
+        description: "Trip dropoff timestamp."
+        data_tests:
+          - not_null
+      - name: trip_miles
+        data_type: double
+        description: "Trip distance measured in miles."
+      - name: driver_pay_amount
+        data_type: double
+        description: "Driver pay amount for the trip."
+
+  - name: stg_green_trips
+    description: "Staging view for all landed green taxi trip parquet files with consistent naming and basic fare metrics."
+    columns:
+      - name: source_file_name
+        data_type: varchar
+        description: "Original parquet file name read directly from the landed local file set."
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the source parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category."
+      - name: pickup_at
+        data_type: timestamp
+        description: "Trip pickup timestamp."
+        data_tests:
+          - not_null
+      - name: dropoff_at
+        data_type: timestamp
+        description: "Trip dropoff timestamp."
+        data_tests:
+          - not_null
+      - name: total_amount
+        data_type: double
+        description: "Total trip amount charged to the rider."
+      - name: cbd_congestion_fee
+        data_type: double
+        description: "Congestion fee introduced in newer TLC trip schemas."
+
+  - name: stg_yellow_trips
+    description: "Staging view for all landed yellow taxi trip parquet files with consistent naming and fare metrics."
+    columns:
+      - name: source_file_name
+        data_type: varchar
+        description: "Original parquet file name read directly from the landed local file set."
+      - name: source_month
+        data_type: date
+        description: "Month extracted from the source parquet file name."
+      - name: service_type
+        data_type: varchar
+        description: "Logical TLC trip service category."
+      - name: pickup_at
+        data_type: timestamp
+        description: "Trip pickup timestamp."
+        data_tests:
+          - not_null
+      - name: dropoff_at
+        data_type: timestamp
+        description: "Trip dropoff timestamp."
+        data_tests:
+          - not_null
+      - name: total_amount
+        data_type: double
+        description: "Total trip amount charged to the rider."
+      - name: airport_fee
+        data_type: double
+        description: "Airport fee charged on eligible trips."

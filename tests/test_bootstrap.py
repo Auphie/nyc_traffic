@@ -25,7 +25,8 @@ class BootstrapDuckdbTests(unittest.TestCase):
                         "select schema_name from information_schema.schemata"
                     ).fetchall()
                 }
-                self.assertIn("raw", schemata)
+                self.assertIn("staging", schemata)
+                self.assertIn("analytics", schemata)
                 self.assertIn("ops", schemata)
 
                 columns = {

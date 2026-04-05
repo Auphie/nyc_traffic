@@ -20,10 +20,10 @@ The project currently includes:
 - a small environment check script plus operational DuckDB bootstrap and metadata setup,
 - local TLC download jobs for full backfill and current-month incremental pulls,
 - local source discovery and ingestion planning against landed files in `data/`,
+- a scenario-1 dbt flow that reads parquet files directly in staging models with DuckDB `read_parquet(...)`,
+- a light analytics table in the `analytics` schema built from those staging models,
 - local and CI style checks for Python and SQL files,
 - a pull request template for incremental feature PRs.
-
-Actual ingestion, dbt models, and broader automated tests will land in the next tickets.
 
 ## Planned Project Layout
 
@@ -172,26 +172,26 @@ Current source rules:
 
 Discovery compares local source objects to `ops.source_metadata` and labels each object as `new`, `unchanged`, or `reload`.
 
-### 7. Run local quality checks
+### 7. Build the dbt ELT layers
+
+```bash
+make dbt-run
+make dbt-test
+```
+
+This materializes:
+
+- `staging.stg_fhv_trips`, `staging.stg_fhvhv_trips`, `staging.stg_green_trips`, and `staging.stg_yellow_trips`
+- `analytics.analytics_trip_activity_monthly`
+
+Each staging model explicitly uses DuckDB `read_parquet(...)` against the local landed TLC files, adds `source_file_name` and `source_month`, and applies only light cleanup filters. `analytics.analytics_trip_activity_monthly` is then materialized from those staging models for downstream BI reads.
+
+`make dbt-test` is available for a very small local test surface and currently checks only the core staging timestamp fields for `not_null`.
+
+### 8. Run local quality checks
 
 ```bash
 make lint
-```
-
-### 8. Run dbt from the repo root
-
-Use the built-in `make` targets so you do not have to remember the dbt project or profile paths:
-
-```bash
-make dbt-debug
-make dbt-run
-```
-
-You can pass extra dbt flags through `DBT_ARGS`:
-
-```bash
-make dbt-run DBT_ARGS="--select example"
-make dbt-test DBT_ARGS="--select example"
 ```
 
 You can also run the checks independently:
@@ -201,11 +201,19 @@ make lint-python
 make lint-sql
 ```
 
+You can also inspect the dbt connection or narrow the model selection:
+
+```bash
+make dbt-debug
+make dbt-run DBT_ARGS="--select stg_yellow_trips"
+make dbt-test DBT_ARGS="--select stg_yellow_trips"
+```
+
 Linting details:
 
 - Python linting uses `ruff`
 - SQL linting uses `sqlfluff`
-- the SQL config is dbt-ready, but it currently uses the `jinja` templater until the dbt project lands in a later ticket
+- the SQL config targets the dbt project under `etl/dbt`
 
 The repository also runs the same style checks in GitHub Actions through `.github/workflows/ci_style_check.yml` on pushes to `main` and on pull requests.
 
@@ -230,7 +238,7 @@ dbt_nyc_traffic:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DBT_DUCKDB_PATH', 'dev.duckdb') }}"
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'nyc_tlc.duckdb') }}"
       schema: dev
       threads: 4
   target: dev
@@ -240,7 +248,7 @@ The tracked project profile now lives at [`.env_duck/profiles.yml`](.env_duck/pr
 
 ## Operational Metadata
 
-The first operational table is `ops.source_metadata`. It is designed to support future idempotent ingestion and auditing.
+The first operational table is `ops.source_metadata`. It is designed to support future idempotent ingestion and source-file tracking.
 
 Required fields:
 
@@ -261,7 +269,7 @@ Additional fields included now for future incremental loading:
 - `last_loaded_at`
 - `last_error`
 
-Those metadata fields are now used by the source discovery planner to classify incoming source objects before raw ingestion is implemented.
+Those metadata fields are now used by the source discovery planner to classify local parquet files before staged transformation runs.
 
 See [build/README.md](build/README.md) for the operational layer notes.
 
@@ -280,7 +288,7 @@ Use it to capture:
 
 The next tickets will add:
 
-1. incremental raw loaders
+1. richer staged and analytics transformations
 2. logging and sample capture
 3. dbt sources, staging, and marts
-4. pytest and dbt test coverage
+4. pytest coverage and scenario-2 incremental loading work
