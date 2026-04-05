@@ -1,6 +1,6 @@
 [sqlfluff]
 dialect = duckdb
-templater = jinja
+templater = dbt
 max_line_length = 100
 
 [sqlfluff:indentation]
@@ -15,5 +15,8 @@ capitalisation_policy = lower
 [sqlfluff:rules:capitalisation.identifiers]
 extended_capitalisation_policy = lower
 
-[sqlfluff:templater:jinja]
-apply_dbt_builtins = True
+[sqlfluff:templater:dbt]
+project_dir = etl/dbt
+profiles_dir = .env_duck
+profile = dbt_nyc_traffic
+target = dev

@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: analytics_trip_activity_monthly
+    description: "Monthly trip activity summary across the four TLC service types derived directly from the staging layer."
+    columns:
+      - name: service_type
+        data_type: varchar
+        description: "TLC service category included in the summary table."
+      - name: trip_month
+        data_type: date
+        description: "Month bucket for the summarized trips."
+      - name: trip_count
+        data_type: bigint
+        description: "Number of trips observed for the service type and month."

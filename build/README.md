@@ -1,14 +1,14 @@
 # build/
 
-This directory will hold the Python utilities that orchestrate the project.
+This directory holds the Python utilities that orchestrate the project.
 
-Planned responsibilities:
+Current responsibilities:
 
 - bootstrap DuckDB schemas and operational metadata
 - discover source files from the local landing zone
-- run incremental raw-data ingestion
+- support dbt runs that read landed parquet files directly into staging views
 - write structured logs and sample outputs
-- trigger dbt runs after raw loads complete
+- trigger dbt runs after local file discovery completes
 
 ## Current Commands
 
@@ -57,9 +57,10 @@ python -m build.source_discovery --output json
 
 The bootstrap flow currently creates:
 
-- `raw` schema for future landed source tables
+- `staging` schema for normalized staging views
+- `analytics` schema for downstream marts and summaries
 - `ops` schema for operational metadata
-- `ops.source_metadata` for source-file tracking and load auditing
+- `ops.source_metadata` for source-file tracking and future incremental orchestration
 
 `ops.source_metadata` columns:
 
@@ -107,6 +108,7 @@ Current runtime expectation:
 
 - parquet trip files are downloaded locally under `data/`
 - discovery reads the local landing zone by default
+- dbt staging views explicitly call DuckDB `read_parquet(...)` against local glob patterns
 - source discovery no longer depends on anonymous S3 listing
 - the default DuckDB file lives at `./nyc_tlc.duckdb`
 - the default dbt profile lives at `./.env_duck/profiles.yml`

@@ -1,3 +1,5 @@
 .env_duck/
 dbt_packages/
 target/
+etl/dbt/logs/
+etl/dbt/target/

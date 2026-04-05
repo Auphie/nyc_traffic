@@ -1,13 +1,11 @@
 # etl/
 
-This directory is reserved for the dbt project.
+This directory holds the dbt project for the NYC TLC demo.
 
-Planned contents:
+Current scenario-1 focus:
 
-- `dbt_project.yml`
-- `models/` for sources, staging, intermediate, and marts
-- `macros/` for reusable SQL or Jinja helpers
-- `snapshots/`, `analyses/`, and dbt test assets as needed
+- `models/staging/` shows direct DuckDB `read_parquet(...)` usage against local TLC parquet files
+- `models/analytics/` contains light downstream tables for BI consumption
+- `macros/` contains only minimal dbt schema helpers
 
-The project will use the `dbt_nyc_traffic` profile and read `../profiles.yml` through `DBT_PROFILES_DIR=..`.
-
+The project uses the `dbt_nyc_traffic` profile from `./.env_duck/profiles.yml`.
