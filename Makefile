@@ -8,11 +8,13 @@ START_MONTH ?=
 END_MONTH ?=
 DBT_PROJECT_DIR ?= etl/dbt
 DBT_PROFILES_DIR ?= .env_duck
-DBT_DUCKDB_PATH ?= $(CURDIR)/nyc_tlc.duckdb
+BUILD_DUCKDB_PATH ?= $(CURDIR)/build.duckdb
+PROD_DUCKDB_PATH ?= $(CURDIR)/prod.duckdb
+DBT_DUCKDB_PATH ?= $(BUILD_DUCKDB_PATH)
 TLC_DATA_DIR ?= $(CURDIR)/data
 DBT_ARGS ?=
 
-.PHONY: venv install check-env bootstrap download-tlc-full download-tlc discover-sources test lint lint-python lint-sql dbt-debug dbt-run dbt-test
+.PHONY: venv install check-env bootstrap download-tlc-full download-tlc discover-sources test lint lint-python lint-sql dbt-debug dbt-run dbt-test swap-duckdb
 
 venv:
 	$(PYTHON) -m venv $(VENV_DIR)
@@ -55,3 +57,6 @@ dbt-run:
 
 dbt-test:
 	DBT_DUCKDB_PATH="$(DBT_DUCKDB_PATH)" TLC_DATA_DIR="$(TLC_DATA_DIR)" $(RUN_DBT) test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR) $(DBT_ARGS)
+
+swap-duckdb:
+	DBT_DUCKDB_PATH="$(BUILD_DUCKDB_PATH)" PROD_DUCKDB_PATH="$(PROD_DUCKDB_PATH)" $(RUN_PYTHON) -m build.swap_duckdb

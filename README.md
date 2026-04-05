@@ -22,6 +22,7 @@ The project currently includes:
 - local source discovery and ingestion planning against landed files in `data/`,
 - a scenario-1 dbt flow that reads parquet files directly in staging models with DuckDB `read_parquet(...)`,
 - a light analytics table in the `analytics` schema built from those staging models,
+- a build-to-prod DuckDB swap command so dbt writes to a build database while visual tools read a separate production database,
 - local and CI style checks for Python and SQL files,
 - a pull request template for incremental feature PRs.
 
@@ -69,16 +70,18 @@ See [requirements.md](requirements.md) for package details and tooling notes.
 
 ### 2. Review the default runtime paths
 
-By default, this project keeps the main DuckDB file and dbt profile inside the repo, while logs stay one level above the repo:
+By default, this project keeps the dbt build database, production database, and dbt profile inside the repo, while logs stay one level above the repo:
 
-- DuckDB database: `./nyc_tlc.duckdb`
+- build DuckDB database: `./build.duckdb`
+- production DuckDB database: `./prod.duckdb`
 - dbt profile: `./.env_duck/profiles.yml`
 - logs directory: `../logs/`
 
 Optional shell overrides:
 
 ```bash
-export DBT_DUCKDB_PATH="$(pwd)/nyc_tlc.duckdb"
+export DBT_DUCKDB_PATH="$(pwd)/build.duckdb"
+export PROD_DUCKDB_PATH="$(pwd)/prod.duckdb"
 export DBT_PROFILES_DIR="$(pwd)/.env_duck"
 ```
 
@@ -179,7 +182,7 @@ make dbt-run
 make dbt-test
 ```
 
-This materializes:
+This materializes into the build database:
 
 - `staging.stg_fhv_trips`, `staging.stg_fhvhv_trips`, `staging.stg_green_trips`, and `staging.stg_yellow_trips`
 - `analytics.analytics_trip_activity_monthly`
@@ -188,7 +191,17 @@ Each staging model explicitly uses DuckDB `read_parquet(...)` against the local 
 
 `make dbt-test` is available for a very small local test surface and currently checks only the core staging timestamp fields for `not_null`.
 
-### 8. Run local quality checks
+### 8. Promote the build database to production
+
+```bash
+make swap-duckdb
+```
+
+This command performs an atomic `os.replace()` from `build.duckdb` to `prod.duckdb`. Before swapping, it checks whether the build database is idle by attempting to open a write connection. If dbt is still transforming, the swap exits without touching production.
+
+Visual tools should point at `prod.duckdb`, while dbt continues to write to `build.duckdb`.
+
+### 9. Run local quality checks
 
 ```bash
 make lint
@@ -238,7 +251,7 @@ dbt_nyc_traffic:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DBT_DUCKDB_PATH', 'nyc_tlc.duckdb') }}"
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'build.duckdb') }}"
       schema: dev
       threads: 4
   target: dev
