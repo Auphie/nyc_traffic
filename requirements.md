@@ -77,13 +77,15 @@ Current linting approach:
 
 This project uses these default runtime paths:
 
-- `./nyc_tlc.duckdb`
+- `./build.duckdb`
+- `./prod.duckdb`
 - `./.env_duck/profiles.yml`
 - `../logs/`
 
 Recommended environment variables:
 
 ```bash
-export DBT_DUCKDB_PATH="$(pwd)/nyc_tlc.duckdb"
+export DBT_DUCKDB_PATH="$(pwd)/build.duckdb"
+export PROD_DUCKDB_PATH="$(pwd)/prod.duckdb"
 export DBT_PROFILES_DIR="$(pwd)/.env_duck"
 ```

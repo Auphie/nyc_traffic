@@ -7,6 +7,7 @@ Current responsibilities:
 - bootstrap DuckDB schemas and operational metadata
 - discover source files from the local landing zone
 - support dbt runs that read landed parquet files directly into staging views
+- promote `build.duckdb` to `prod.duckdb` with an atomic swap once the build is idle
 - write structured logs and sample outputs
 - trigger dbt runs after local file discovery completes
 
@@ -109,6 +110,10 @@ Current runtime expectation:
 - parquet trip files are downloaded locally under `data/`
 - discovery reads the local landing zone by default
 - dbt staging views explicitly call DuckDB `read_parquet(...)` against local glob patterns
+- dbt writes to `./build.duckdb` by default
+- visual tools should read `./prod.duckdb`
+- `python -m build.swap_duckdb` promotes build to prod with `os.replace()` after a build-lock check
 - source discovery no longer depends on anonymous S3 listing
-- the default DuckDB file lives at `./nyc_tlc.duckdb`
+- the default build DuckDB file lives at `./build.duckdb`
+- the default production DuckDB file lives at `./prod.duckdb`
 - the default dbt profile lives at `./.env_duck/profiles.yml`

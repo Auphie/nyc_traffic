@@ -30,6 +30,13 @@ def _path_exists(path: Path) -> tuple[bool, str]:
     return path.exists(), str(path)
 
 
+def _optional_path_status(path: Path, empty_detail: str) -> tuple[bool, str]:
+    if path.exists():
+        return True, str(path)
+
+    return True, f"{path} ({empty_detail})"
+
+
 def _env_path_status(env_name: str, resolved_path: Path, raw_value: str) -> tuple[bool, str]:
     if env_name in os.environ:
         return True, f"{raw_value} (from environment)"
@@ -59,7 +66,14 @@ def main() -> int:
     checks = [
         ("Repo root", True, str(project_paths.root_dir)),
         ("Parent directory", True, str(project_paths.parent_dir)),
-        ("DuckDB path", *_path_exists(project_paths.duckdb_path)),
+        ("Build DuckDB path", *_path_exists(project_paths.build_duckdb_path)),
+        (
+            "Production DuckDB path",
+            *_optional_path_status(
+                project_paths.prod_duckdb_path,
+                "created on first swap",
+            ),
+        ),
         ("dbt profile", *_path_exists(project_paths.profiles_path)),
         ("Logs directory", *_path_exists(project_paths.logs_dir)),
         (
