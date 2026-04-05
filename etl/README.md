@@ -9,3 +9,9 @@ Current scenario-1 focus:
 - `macros/` contains only minimal dbt schema helpers
 
 The project uses the `dbt_nyc_traffic` profile from `./.env_duck/profiles.yml`.
+
+Boundary with future directories:
+
+- `build/` prepares and promotes databases
+- `airflow/` schedules dbt runs
+- `streamlit/` reads dbt outputs from `prod.duckdb`

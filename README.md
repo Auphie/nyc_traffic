@@ -23,6 +23,7 @@ The project currently includes:
 - a scenario-1 dbt flow that reads parquet files directly in staging models with DuckDB `read_parquet(...)`,
 - a light analytics table in the `analytics` schema built from those staging models,
 - a build-to-prod DuckDB swap command so dbt writes to a build database while visual tools read a separate production database,
+- scaffold directories for future Airflow orchestration and Streamlit serving layers,
 - local and CI style checks for Python and SQL files,
 - a pull request template for incremental feature PRs.
 
@@ -30,8 +31,11 @@ The project currently includes:
 
 ```text
 nyc_traffic/
+├── airflow/            # Airflow DAGs and scheduler-only assets
 ├── build/              # Python orchestration, bootstrap, ingestion, utilities
+├── docs/               # architecture notes and project structure docs
 ├── etl/                # dbt project and SQL models
+├── streamlit/          # Streamlit app and dashboard pages
 ├── tests/              # pytest unit and integration tests
 ├── Makefile            # local convenience commands
 ├── README.md           # project overview and tutorial
@@ -39,6 +43,15 @@ nyc_traffic/
 ├── requirements.md     # package rationale and setup notes
 └── profiles.example.yml
 ```
+
+Recommended ownership:
+
+- `build/` holds shared Python logic and CLI entrypoints
+- `etl/` holds dbt transformations
+- `airflow/` should hold thin DAG wrappers that call into `build/` and dbt
+- `streamlit/` should stay read-only against `prod.duckdb`
+
+See [docs/project_structure.md](/Users/LED/Code/Github/Auphie/nyc_traffic/docs/project_structure.md) for the suggested whole-project structure.
 
 ## Data Sources
 
