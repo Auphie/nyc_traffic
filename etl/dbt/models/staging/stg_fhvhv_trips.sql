@@ -39,20 +39,11 @@ validated as (
     select *
     from normalized
     where
-        (pickup_at is null or dropoff_at is null or dropoff_at >= pickup_at)
-        and (pickup_location_id is null or pickup_location_id >= 0)
-        and (dropoff_location_id is null or dropoff_location_id >= 0)
-        and (trip_miles is null or trip_miles >= 0)
-        and (trip_time_seconds is null or trip_time_seconds >= 0)
-        and (base_passenger_fare is null or base_passenger_fare >= 0)
-        and (tolls_amount is null or tolls_amount >= 0)
-        and (bcf_amount is null or bcf_amount >= 0)
-        and (sales_tax_amount is null or sales_tax_amount >= 0)
-        and (congestion_surcharge is null or congestion_surcharge >= 0)
-        and (airport_fee is null or airport_fee >= 0)
-        and (tip_amount is null or tip_amount >= 0)
-        and (driver_pay_amount is null or driver_pay_amount >= 0)
-        and (cbd_congestion_fee is null or cbd_congestion_fee >= 0)
+        pickup_at is not null
+        and dropoff_at is not null
+        and dropoff_at >= pickup_at
+        and pickup_location_id is not null
+        and dropoff_location_id is not null
 )
 
 select *

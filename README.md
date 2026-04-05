@@ -210,9 +210,11 @@ This materializes into the build database:
 - `staging.stg_fhv_trips`, `staging.stg_fhvhv_trips`, `staging.stg_green_trips`, and `staging.stg_yellow_trips`
 - `staging.stg_taxi_zone_lookup`
 - `core.dim_taxi_zone`
+- `core.fct_taxi_core_info`
 - `analytics.fct_trip_activity_monthly`
+- `analytics.fct_hourly_taxi_core_stats`
 
-Each trip staging model explicitly uses DuckDB `read_parquet(...)` against the local landed TLC files, adds `source_file_name` and `source_month`, and applies only light cleanup filters. The taxi-zone staging view normalizes the seeded lookup table for location joins. The core layer materializes `core.dim_taxi_zone`, and the analytics layer materializes `analytics.fct_trip_activity_monthly` for downstream BI reads.
+Each trip staging model explicitly uses DuckDB `read_parquet(...)` against the local landed TLC files, adds `source_file_name` and `source_month`, and applies only light cleanup filters. The taxi-zone staging view normalizes the seeded lookup table for location joins. The core layer now includes `core.dim_taxi_zone` and the lightweight `core.fct_taxi_core_info` view for fast downstream modeling, while the analytics layer materializes `analytics.fct_trip_activity_monthly` and `analytics.fct_hourly_taxi_core_stats` for downstream BI reads.
 
 `make dbt-test` is available for a very small local test surface and currently checks only the core staging timestamp fields for `not_null`.
 

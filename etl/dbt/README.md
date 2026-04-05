@@ -12,8 +12,8 @@ Current model layout:
 
 - `seeds/taxi_zone_lookup.csv` loads the taxi zone reference table
 - `models/staging/` holds the parquet-backed trip staging views plus `stg_taxi_zone_lookup`
-- `models/core/` holds shared dimensional tables such as `dim_taxi_zone`
-- `models/analytics/` holds BI-facing fact and summary tables such as `fct_trip_activity_monthly`
+- `models/core/` holds shared dimensional tables and lightweight core facts such as `dim_taxi_zone` and `fct_taxi_core_info`
+- `models/analytics/` holds BI-facing fact and summary tables such as `fct_trip_activity_monthly` and `fct_hourly_taxi_core_stats`
 
 Useful commands:
 

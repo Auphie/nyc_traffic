@@ -16,3 +16,33 @@ models:
       - name: service_zone
         data_type: varchar
         description: "Higher-level TLC service-zone grouping for the taxi zone."
+  - name: fct_taxi_core_info
+    description: "Core trip-event view with common pickup, drop-off, and trip-distance fields aligned across the four TLC service types."
+    columns:
+      - name: service_type
+        data_type: varchar
+        description: "TLC service category for the trip record."
+      - name: pickup_location_id
+        data_type: integer
+        description: "Pickup Taxi Zone identifier associated with the trip."
+      - name: dropoff_location_id
+        data_type: integer
+        description: "Drop-off Taxi Zone identifier associated with the trip."
+      - name: event_date
+        data_type: date
+        description: "Calendar date derived from the trip pickup timestamp."
+      - name: event_hour
+        data_type: bigint
+        description: "Hour of day extracted from the trip pickup timestamp."
+      - name: pickup_datetime
+        data_type: timestamp
+        description: "Canonical pickup timestamp for the trip."
+      - name: dropoff_datetime
+        data_type: timestamp
+        description: "Canonical drop-off timestamp for the trip."
+      - name: commute_datetime
+        data_type: interval
+        description: "Trip duration represented as the interval between drop-off and pickup timestamps."
+      - name: trip_distance
+        data_type: double
+        description: "Trip distance in miles when available; null for FHV records that do not provide distance."

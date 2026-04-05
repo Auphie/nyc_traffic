@@ -13,3 +13,39 @@ models:
       - name: trip_count
         data_type: bigint
         description: "Number of trips observed for the service type and month."
+  - name: fct_hourly_taxi_core_stats
+    description: "Hourly taxi trip statistics aggregated from the core trip fact and enriched with pickup and drop-off taxi zone attributes."
+    columns:
+      - name: pickup_borough
+        data_type: varchar
+        description: "Borough associated with the pickup taxi zone."
+      - name: pickup_zone
+        data_type: varchar
+        description: "Pickup taxi zone name."
+      - name: pickup_service_zone
+        data_type: varchar
+        description: "Pickup taxi service-zone grouping."
+      - name: dropoff_borough
+        data_type: varchar
+        description: "Borough associated with the drop-off taxi zone."
+      - name: dropoff_zone
+        data_type: varchar
+        description: "Drop-off taxi zone name."
+      - name: dropoff_service_zone
+        data_type: varchar
+        description: "Drop-off taxi service-zone grouping."
+      - name: service_type
+        data_type: varchar
+        description: "TLC service category represented in the aggregated hour."
+      - name: event_date
+        data_type: date
+        description: "Pickup calendar date for the aggregated trip hour."
+      - name: event_hour
+        data_type: bigint
+        description: "Pickup hour of day for the aggregated trip hour."
+      - name: average_commute_minutes
+        data_type: double
+        description: "Average trip duration in minutes for the aggregation grain."
+      - name: average_commute_distance
+        data_type: double
+        description: "Average trip distance in miles for the aggregation grain."
