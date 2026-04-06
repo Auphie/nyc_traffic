@@ -9,6 +9,7 @@
 __pycache__/
 build/__pycache__/
 tests/__pycache__/
+airflow/.local/
 data/
 *.py[cod]
 *.duckdb

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 
 try:
     from build.tlc_download_helpers import (
@@ -41,6 +42,52 @@ def format_incremental_download_error(
     )
 
 
+def run_incremental_download(
+    table_names: list[str] | None = None,
+    *,
+    source_month: date | None = None,
+    data_dir: str = DEFAULT_DATA_DIR,
+    overwrite: bool = False,
+) -> dict[str, object]:
+    selected_table_names = table_names or incremental_trip_tables()
+    selected_source_month = source_month or current_system_month()
+
+    try:
+        targets = build_download_targets(
+            selected_table_names,
+            [selected_source_month],
+            data_dir,
+        )
+        downloaded_paths: list[str] = []
+        for target, destination_path in zip(
+            targets,
+            download_targets(targets, overwrite=overwrite),
+            strict=True,
+        ):
+            downloaded_paths.append(str(destination_path))
+            print(
+                f"downloaded {target.table_name} {target.source_month:%Y-%m} -> "
+                f"{destination_path}"
+            )
+    except DownloadFromTlcError as exc:
+        message = format_incremental_download_error(selected_source_month, exc)
+        return {
+            "status": "fallback",
+            "source_month": selected_source_month.strftime("%Y-%m"),
+            "message": message,
+        }
+
+    return {
+        "status": "success",
+        "source_month": selected_source_month.strftime("%Y-%m"),
+        "message": (
+            f"Downloaded {len(downloaded_paths)} file(s) for "
+            f"{selected_source_month:%Y-%m}."
+        ),
+        "downloaded_paths": downloaded_paths,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -71,22 +118,14 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    table_names = args.table or incremental_trip_tables()
-    source_month = args.month or current_system_month()
-
-    try:
-        targets = build_download_targets(table_names, [source_month], args.data_dir)
-        for target, destination_path in zip(
-            targets,
-            download_targets(targets, overwrite=args.overwrite),
-            strict=True,
-        ):
-            print(
-                f"downloaded {target.table_name} {target.source_month:%Y-%m} -> "
-                f"{destination_path}"
-            )
-    except DownloadFromTlcError as exc:
-        print(format_incremental_download_error(source_month, exc), file=sys.stderr)
+    result = run_incremental_download(
+        args.table,
+        source_month=args.month,
+        data_dir=args.data_dir,
+        overwrite=args.overwrite,
+    )
+    if result["status"] != "success":
+        print(result["message"], file=sys.stderr)
         return 2
 
     return 0

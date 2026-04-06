@@ -11,8 +11,8 @@ nyc_traffic/
 ├── etl/               # dbt project
 ├── streamlit/         # Dashboard application layer
 ├── tests/             # Python unit and integration tests
-├── build.duckdb       # dbt build database
-├── prod.duckdb        # serving database for dashboards
+├── state/build/nyc_tlc.duckdb   # dbt build database
+├── state/prod/nyc_tlc.duckdb    # serving database for dashboards
 └── Makefile
 ```
 
@@ -20,7 +20,7 @@ Recommended ownership by directory:
 
 - `build/`: shared Python modules for download, discovery, bootstrap, and DuckDB swap
 - `etl/`: dbt staging and analytics models
-- `airflow/`: scheduler wrappers that call `build/` and dbt
+- `airflow/`: scheduler wrappers that call `build/`, dbt, and swap promotion
 - `streamlit/`: read-only application layer for dashboards
 - `tests/`: tests for shared Python logic and future app/orchestration integrations
 

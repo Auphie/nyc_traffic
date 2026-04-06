@@ -26,7 +26,8 @@ The project currently includes:
 - light analytics tables in the `analytics` schema built from staging models,
 - a build-to-prod DuckDB swap command so dbt writes to a build database while visual tools read a separate production database,
 - a Streamlit dashboard layer that reads the production DuckDB file in read-only mode,
-- scaffold directories for future Airflow orchestration,
+- a local Airflow orchestration layer with a thin DAG over the existing Make/dbt workflow,
+- a local Airflow setup that can orchestrate the existing download -> dbt -> swap flow,
 - local and CI style checks for Python and SQL files,
 - a pull request template for incremental feature PRs.
 
@@ -81,6 +82,16 @@ The first four will be loaded incrementally. `taxi_zone_shape` will be handled a
 make install
 source .env_duck/bin/activate
 ```
+
+`make install` now sets up the full demo environment in `.env_duck`, including:
+
+- DuckDB and dbt
+- Streamlit
+- lint/test tooling
+- Airflow
+
+It also reapplies a small set of compatibility pins after the Airflow install
+step so dbt and Airflow can coexist in the same demo environment.
 
 See [requirements.md](requirements.md) for package details and tooling notes.
 
@@ -231,7 +242,48 @@ Build and production now use the same file name in different directories so Duck
 
 Visual tools should point at `state/prod/nyc_tlc.duckdb`, while dbt continues to write to `state/build/nyc_tlc.duckdb`.
 
-### 10. Launch the Streamlit dashboard
+### 10. Orchestrate the local pipeline with Airflow
+
+For this demo project, Airflow is installed into the same `.env_duck`
+environment as dbt, DuckDB, and Streamlit.
+
+This is intentionally simpler than the more common separate-Airflow setup
+because the goal here is a laptop-friendly demo with minimal activation steps.
+For a more production-like deployment, a separate Airflow environment or host
+would still be the safer default.
+
+Airflow is already included when you run `make install`. If you ever need to
+re-run only the Airflow part, you can still use:
+
+```bash
+make airflow-install
+```
+
+Start a local standalone Airflow instance:
+
+```bash
+make airflow-standalone
+```
+
+Useful commands:
+
+```bash
+make airflow-list-dags
+make airflow-trigger-pipeline
+```
+
+The included DAG, `nyc_tlc_local_pipeline`, shells out to the existing project
+commands:
+
+1. `make download-tlc`
+2. `make bootstrap`
+3. `make dbt-seed`
+4. `make dbt-run`
+5. `make swap-duckdb`
+
+See [airflow/README.md](/Users/LED/Code/Github/Auphie/nyc_traffic/airflow/README.md) for more details.
+
+### 11. Launch the Streamlit dashboard
 
 ```bash
 make streamlit-run
