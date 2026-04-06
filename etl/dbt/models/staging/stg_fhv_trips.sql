@@ -21,11 +21,12 @@ validated as (
     select *
     from normalized
     where
-        pickup_at is not null
-        and dropoff_at is not null
+        DATE(pickup_at) < '2026-02-01'
+        and DATE(dropoff_at) < '2026-02-01'
         and dropoff_at >= pickup_at
         and pickup_location_id is not null
         and dropoff_location_id is not null
+        and date_diff('day', pickup_at, dropoff_at) < 2
 )
 
 select *
