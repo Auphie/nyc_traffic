@@ -9,7 +9,7 @@ sources:
       represents one trip made by a TLC-licensed vehicle.
     loader: build.download_from_tlc
     tags: ["Scenario1", "LocalParquet"]
-    database: build
+    database: nyc_tlc
     schema: staging
     tables:
       - name: stg_fhv_trips

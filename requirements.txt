@@ -11,3 +11,4 @@ PyYAML
 ruff
 sqlfluff
 sqlfluff-templater-dbt
+streamlit
