@@ -6,8 +6,9 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 PARENT_DIR = ROOT_DIR.parent
-DEFAULT_BUILD_DUCKDB_PATH = ROOT_DIR / "build.duckdb"
-DEFAULT_PROD_DUCKDB_PATH = ROOT_DIR / "prod.duckdb"
+DEFAULT_DUCKDB_FILENAME = "nyc_tlc.duckdb"
+DEFAULT_BUILD_DUCKDB_PATH = ROOT_DIR / "state" / "build" / DEFAULT_DUCKDB_FILENAME
+DEFAULT_PROD_DUCKDB_PATH = ROOT_DIR / "state" / "prod" / DEFAULT_DUCKDB_FILENAME
 DEFAULT_PROFILES_DIR = ROOT_DIR / ".env_duck"
 DEFAULT_PROFILES_PATH = DEFAULT_PROFILES_DIR / "profiles.yml"
 

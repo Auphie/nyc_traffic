@@ -15,8 +15,10 @@ from build.swap_duckdb import ensure_build_database_is_idle, swap_build_to_prod
 class SwapDuckdbTests(unittest.TestCase):
     def test_swap_moves_build_database_to_prod_path(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            build_path = Path(temp_dir) / "build.duckdb"
-            prod_path = Path(temp_dir) / "prod.duckdb"
+            build_path = Path(temp_dir) / "build" / "nyc_tlc.duckdb"
+            prod_path = Path(temp_dir) / "prod" / "nyc_tlc.duckdb"
+            build_path.parent.mkdir(parents=True, exist_ok=True)
+            prod_path.parent.mkdir(parents=True, exist_ok=True)
 
             with duckdb.connect(str(build_path)) as connection:
                 connection.execute("create table marker as select 42 as value")
@@ -37,15 +39,17 @@ class SwapDuckdbTests(unittest.TestCase):
 
     def test_swap_raises_when_build_database_is_missing(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            build_path = Path(temp_dir) / "missing_build.duckdb"
-            prod_path = Path(temp_dir) / "prod.duckdb"
+            build_path = Path(temp_dir) / "build" / "nyc_tlc.duckdb"
+            prod_path = Path(temp_dir) / "prod" / "nyc_tlc.duckdb"
+            prod_path.parent.mkdir(parents=True, exist_ok=True)
 
             with self.assertRaises(FileNotFoundError):
                 swap_build_to_prod(build_path, prod_path)
 
     def test_idle_check_detects_external_build_lock(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            build_path = Path(temp_dir) / "locked_build.duckdb"
+            build_path = Path(temp_dir) / "build" / "nyc_tlc.duckdb"
+            build_path.parent.mkdir(parents=True, exist_ok=True)
 
             with duckdb.connect(str(build_path)) as connection:
                 connection.execute("create table marker as select 1 as value")

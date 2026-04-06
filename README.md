@@ -25,7 +25,8 @@ The project currently includes:
 - a `core` dimension layer for shared reference models such as taxi zones,
 - light analytics tables in the `analytics` schema built from staging models,
 - a build-to-prod DuckDB swap command so dbt writes to a build database while visual tools read a separate production database,
-- scaffold directories for future Airflow orchestration and Streamlit serving layers,
+- a Streamlit dashboard layer that reads the production DuckDB file in read-only mode,
+- scaffold directories for future Airflow orchestration,
 - local and CI style checks for Python and SQL files,
 - a pull request template for incremental feature PRs.
 
@@ -51,7 +52,7 @@ Recommended ownership:
 - `build/` holds shared Python logic and CLI entrypoints
 - `etl/` holds dbt transformations
 - `airflow/` should hold thin DAG wrappers that call into `build/` and dbt
-- `streamlit/` should stay read-only against `prod.duckdb`
+- `streamlit/` should stay read-only against the production DuckDB file
 
 See [docs/project_structure.md](/Users/LED/Code/Github/Auphie/nyc_traffic/docs/project_structure.md) for the suggested whole-project structure.
 
@@ -87,16 +88,16 @@ See [requirements.md](requirements.md) for package details and tooling notes.
 
 By default, this project keeps the dbt build database, production database, and dbt profile inside the repo, while logs stay one level above the repo:
 
-- build DuckDB database: `./build.duckdb`
-- production DuckDB database: `./prod.duckdb`
+- build DuckDB database: `./state/build/nyc_tlc.duckdb`
+- production DuckDB database: `./state/prod/nyc_tlc.duckdb`
 - dbt profile: `./.env_duck/profiles.yml`
 - logs directory: `../logs/`
 
 Optional shell overrides:
 
 ```bash
-export DBT_DUCKDB_PATH="$(pwd)/build.duckdb"
-export PROD_DUCKDB_PATH="$(pwd)/prod.duckdb"
+export DBT_DUCKDB_PATH="$(pwd)/state/build/nyc_tlc.duckdb"
+export PROD_DUCKDB_PATH="$(pwd)/state/prod/nyc_tlc.duckdb"
 export DBT_PROFILES_DIR="$(pwd)/.env_duck"
 ```
 
@@ -224,11 +225,35 @@ Each trip staging model explicitly uses DuckDB `read_parquet(...)` against the l
 make swap-duckdb
 ```
 
-This command performs an atomic `os.replace()` from `build.duckdb` to `prod.duckdb`. Before swapping, it checks whether the build database is idle by attempting to open a write connection. If dbt is still transforming, the swap exits without touching production.
+This command performs an atomic `os.replace()` from `state/build/nyc_tlc.duckdb` to `state/prod/nyc_tlc.duckdb`. Before swapping, it checks whether the build database is idle by attempting to open a write connection. If dbt is still transforming, the swap exits without touching production.
 
-Visual tools should point at `prod.duckdb`, while dbt continues to write to `build.duckdb`.
+Build and production now use the same file name in different directories so DuckDB catalog references remain valid after the swap.
 
-### 10. Run local quality checks
+Visual tools should point at `state/prod/nyc_tlc.duckdb`, while dbt continues to write to `state/build/nyc_tlc.duckdb`.
+
+### 10. Launch the Streamlit dashboard
+
+```bash
+make streamlit-run
+```
+
+The app reads `state/prod/nyc_tlc.duckdb` in read-only mode and expects the serving database to
+already contain the `core` and `analytics` models. The normal local sequence is:
+
+```bash
+make dbt-seed
+make dbt-run
+make swap-duckdb
+make streamlit-run
+```
+
+Override the serving database or port if needed:
+
+```bash
+make streamlit-run PROD_DUCKDB_PATH="$(pwd)/state/prod/nyc_tlc.duckdb" STREAMLIT_PORT=8502
+```
+
+### 11. Run local quality checks
 
 ```bash
 make lint
@@ -248,6 +273,7 @@ make dbt-debug
 make dbt-seed DBT_ARGS="--select taxi_zone_lookup"
 make dbt-run DBT_ARGS="--select stg_yellow_trips"
 make dbt-test DBT_ARGS="--select stg_yellow_trips"
+make streamlit-run
 ```
 
 Linting details:
@@ -279,7 +305,7 @@ dbt_nyc_traffic:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DBT_DUCKDB_PATH', 'build.duckdb') }}"
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'state/build/nyc_tlc.duckdb') }}"
       schema: dev
       threads: 4
   target: dev

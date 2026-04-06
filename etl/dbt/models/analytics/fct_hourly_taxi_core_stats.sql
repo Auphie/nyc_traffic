@@ -20,7 +20,7 @@ with enriched_trips as (
         on core_info.pickup_location_id = pickup_zone.location_id
     left join {{ ref('dim_taxi_zone') }} as dropoff_zone
         on core_info.dropoff_location_id = dropoff_zone.location_id
-    where core_info.event_date >= (select max(event_date) - interval '7' day from {{ ref('fct_taxi_core_info') }})
+    where core_info.event_date between '2026-01-01' and '2026-02-28'
 )
 
 select

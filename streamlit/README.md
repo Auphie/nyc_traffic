@@ -1,25 +1,26 @@
 # streamlit/
 
-This directory is reserved for the Streamlit application layer.
+This directory holds the Streamlit serving layer for the NYC TLC demo.
 
-Recommended responsibilities:
+Current responsibilities:
 
-- `app.py` is the main entrypoint
-- `pages/` contains multi-page Streamlit views
-- `components/` contains small UI helpers or query wrappers
-- the app reads from `prod.duckdb` in read-only mode
+- `app.py` is the main dashboard entrypoint
+- `pages/` contains focused exploratory pages such as zone-flow drilldowns
+- `components/` contains shared DuckDB query helpers
+- the app reads from `state/prod/nyc_tlc.duckdb` in read-only mode
+
+Local run flow:
+
+```bash
+make dbt-seed
+make dbt-run
+make swap-duckdb
+make streamlit-run
+```
 
 Recommended practice:
 
 - keep Streamlit read-only
-- treat `prod.duckdb` as the serving database
+- treat `state/prod/nyc_tlc.duckdb` as the serving database
 - keep transformation logic in dbt, not in the Streamlit app
-
-Suggested future layout:
-
-```text
-streamlit/
-├── app.py
-├── pages/
-└── components/
-```
+- keep DuckDB access centralized in `streamlit/components/`

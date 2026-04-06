@@ -25,6 +25,7 @@ Package summary:
 - `ruff`: fast Python linting
 - `sqlfluff`: SQL linter for DuckDB/dbt-style SQL
 - `sqlfluff-templater-dbt`: dbt-aware templating support for future dbt models
+- `streamlit`: local dashboard layer for read-only serving against the production DuckDB file
 
 ## AWS CLI
 
@@ -77,15 +78,25 @@ Current linting approach:
 
 This project uses these default runtime paths:
 
-- `./build.duckdb`
-- `./prod.duckdb`
+- `./state/build/nyc_tlc.duckdb`
+- `./state/prod/nyc_tlc.duckdb`
 - `./.env_duck/profiles.yml`
 - `../logs/`
 
 Recommended environment variables:
 
 ```bash
-export DBT_DUCKDB_PATH="$(pwd)/build.duckdb"
-export PROD_DUCKDB_PATH="$(pwd)/prod.duckdb"
+export DBT_DUCKDB_PATH="$(pwd)/state/build/nyc_tlc.duckdb"
+export PROD_DUCKDB_PATH="$(pwd)/state/prod/nyc_tlc.duckdb"
 export DBT_PROFILES_DIR="$(pwd)/.env_duck"
 ```
+
+## Streamlit
+
+Launch the local dashboard with:
+
+```bash
+make streamlit-run
+```
+
+The Streamlit app is intentionally read-only and should point at `./state/prod/nyc_tlc.duckdb`.
