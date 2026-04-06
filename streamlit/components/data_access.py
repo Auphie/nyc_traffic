@@ -112,7 +112,8 @@ def fetch_monthly_activity(path: Path | None = None) -> pd.DataFrame:
 def fetch_service_types(path: Path | None = None) -> list[str]:
     sql = """
         select distinct service_type
-        from core.fct_taxi_core_info
+        from analytics.fct_hourly_taxi_core_stats
+        where service_type is not null
         order by service_type
     """
     frame = run_query(sql, path=path)
@@ -146,9 +147,120 @@ def fetch_hourly_taxi_core_stats(
     return run_query(sql, path=path, params=[service_type, service_type, limit])
 
 
+def fetch_pickup_zones(path: Path | None = None) -> list[str]:
+    return fetch_pickup_zones_by_date(event_date=None, path=path)
+
+
+def fetch_event_dates(path: Path | None = None) -> list[str]:
+    sql = """
+        select distinct cast(event_date as varchar) as event_date
+        from analytics.fct_hourly_taxi_core_stats
+        where event_date is not null
+        order by event_date desc
+    """
+    frame = run_query(sql, path=path)
+    return [str(value) for value in frame["event_date"].tolist()]
+
+
+def fetch_pickup_zones_by_date(
+    event_date: str | None,
+    *,
+    pickup_borough: str | None = None,
+    service_type: str | None = None,
+    path: Path | None = None,
+) -> list[str]:
+    sql = """
+        select distinct pickup_zone
+        from analytics.fct_hourly_taxi_core_stats
+        where pickup_zone is not null
+          and (? is null or cast(event_date as varchar) = ?)
+          and (? is null or pickup_borough = ?)
+          and (? is null or service_type = ?)
+        order by pickup_zone
+    """
+    frame = run_query(
+        sql,
+        path=path,
+        params=[
+            event_date,
+            event_date,
+            pickup_borough,
+            pickup_borough,
+            service_type,
+            service_type,
+        ],
+    )
+    return [str(value) for value in frame["pickup_zone"].tolist()]
+
+
+def fetch_pickup_boroughs(
+    event_date: str | None,
+    *,
+    service_type: str | None,
+    path: Path | None = None,
+) -> list[str]:
+    sql = """
+        select distinct pickup_borough
+        from analytics.fct_hourly_taxi_core_stats
+        where pickup_borough is not null
+          and (? is null or cast(event_date as varchar) = ?)
+          and (? is null or service_type = ?)
+        order by pickup_borough
+    """
+    frame = run_query(
+        sql,
+        path=path,
+        params=[event_date, event_date, service_type, service_type],
+    )
+    return [str(value) for value in frame["pickup_borough"].tolist()]
+
+
+def fetch_pickup_zone_hourly_stats(
+    *,
+    event_date: str | None,
+    pickup_borough: str | None,
+    service_type: str | None,
+    metric: str,
+    path: Path | None = None,
+) -> pd.DataFrame:
+    metric_column = (
+        "average_commute_distance"
+        if metric == "average_commute_distance"
+        else "average_commute_minutes"
+    )
+    metric_sql = "count(*)" if metric == "count" else f"avg({metric_column})"
+    sql = f"""
+        select
+            event_hour,
+            pickup_zone,
+            {metric_sql} as metric_value
+        from analytics.fct_hourly_taxi_core_stats
+        where pickup_zone is not null
+          and (? is null or cast(event_date as varchar) = ?)
+          and (? is null or pickup_borough = ?)
+          and (? is null or service_type = ?)
+          and ({'true' if metric == 'count' else metric_column + ' is not null'})
+        group by 1, 2
+        order by 2, 1
+    """
+    return run_query(
+        sql,
+        path=path,
+        params=[
+            event_date,
+            event_date,
+            pickup_borough,
+            pickup_borough,
+            service_type,
+            service_type,
+        ],
+    )
+
+
 def fetch_route_rankings(
     path: Path | None = None,
     *,
+    event_date: str | None = None,
     service_type: str | None = None,
     sort_metric: str = "average_commute_minutes",
     limit: int = 15,
@@ -168,11 +280,88 @@ def fetch_route_rankings(
             average_commute_minutes,
             average_commute_distance
         from analytics.fct_hourly_taxi_core_stats
-        where (? is null or service_type = ?)
+        where (? is null or cast(event_date as varchar) = ?)
+          and (? is null or service_type = ?)
+          and {metric} is not null
         order by {metric} desc nulls last, event_date desc, event_hour desc
         limit ?
     """
-    return run_query(sql, path=path, params=[service_type, service_type, limit])
+    return run_query(
+        sql,
+        path=path,
+        params=[event_date, event_date, service_type, service_type, limit],
+    )
+
+
+def fetch_route_overview_stats(
+    path: Path | None = None,
+    *,
+    event_date: str | None = None,
+    service_type: str | None = None,
+) -> dict[str, Any]:
+    sql = """
+        select
+            count(*) as route_rows,
+            count(distinct pickup_zone) as pickup_zones,
+            count(distinct dropoff_zone) as dropoff_zones,
+            avg(average_commute_minutes) as avg_commute_minutes,
+            avg(average_commute_distance) as avg_commute_distance
+        from analytics.fct_hourly_taxi_core_stats
+        where (? is null or cast(event_date as varchar) = ?)
+          and (? is null or service_type = ?)
+    """
+    frame = run_query(
+        sql,
+        path=path,
+        params=[event_date, event_date, service_type, service_type],
+    )
+    if frame.empty:
+        return {
+            "route_rows": 0,
+            "pickup_zones": 0,
+            "dropoff_zones": 0,
+            "avg_commute_minutes": None,
+            "avg_commute_distance": None,
+        }
+
+    row = frame.iloc[0].to_dict()
+    return {
+        "route_rows": int(row["route_rows"] or 0),
+        "pickup_zones": int(row["pickup_zones"] or 0),
+        "dropoff_zones": int(row["dropoff_zones"] or 0),
+        "avg_commute_minutes": row["avg_commute_minutes"],
+        "avg_commute_distance": row["avg_commute_distance"],
+    }
+
+
+def fetch_route_hourly_profile(
+    path: Path | None = None,
+    *,
+    event_date: str | None = None,
+    service_type: str | None = None,
+    metric: str = "average_commute_minutes",
+) -> pd.DataFrame:
+    metric_column = (
+        "average_commute_distance"
+        if metric == "average_commute_distance"
+        else "average_commute_minutes"
+    )
+    sql = f"""
+        select
+            event_hour,
+            avg({metric_column}) as metric_value
+        from analytics.fct_hourly_taxi_core_stats
+        where (? is null or cast(event_date as varchar) = ?)
+          and (? is null or service_type = ?)
+          and {metric_column} is not null
+        group by 1
+        order by 1
+    """
+    return run_query(
+        sql,
+        path=path,
+        params=[event_date, event_date, service_type, service_type],
+    )
 
 
 def fetch_recent_core_sample(path: Path | None = None, *, limit: int = 200) -> pd.DataFrame:

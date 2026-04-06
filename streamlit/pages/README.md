@@ -6,5 +6,6 @@ Use this directory for multi-page Streamlit views such as:
 - service-type comparisons
 - fare and distance exploration
 - zone-flow exploration
+- zone-hourly heatmaps by pickup zone and metric
 
 Keep shared query logic in `streamlit/components/` or reusable modules, not duplicated across pages.
