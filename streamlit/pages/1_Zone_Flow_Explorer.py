@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import altair as alt
 import pandas as pd
 
 import streamlit as st
@@ -185,10 +186,33 @@ def main() -> None:
         + " -> "
         + chart_frame["dropoff_zone"].fillna("Unknown")
     )
-    chart_frame = chart_frame.set_index("route_label")[[sort_metric]]
+    chart_frame = chart_frame[["route_label", sort_metric]].sort_values(
+        by=sort_metric,
+        ascending=False,
+    )
 
     st.subheader("Top Route Rankings")
-    st.bar_chart(chart_frame)
+    rankings_chart = (
+        alt.Chart(chart_frame)
+        .mark_bar(cornerRadiusEnd=4)
+        .encode(
+            x=alt.X(
+                f"{sort_metric}:Q",
+                title=metric_label,
+            ),
+            y=alt.Y(
+                "route_label:N",
+                title="Pickup -> Dropoff Route",
+                sort="-x",
+            ),
+            tooltip=[
+                alt.Tooltip("route_label:N", title="Route"),
+                alt.Tooltip(f"{sort_metric}:Q", title=metric_label, format=",.2f"),
+            ],
+        )
+        .properties(height=max(360, len(chart_frame) * 22))
+    )
+    st.altair_chart(rankings_chart, use_container_width=True)
     st.dataframe(rankings, use_container_width=True, hide_index=True)
 
 
