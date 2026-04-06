@@ -3,7 +3,8 @@ VENV_DIR ?= .env_duck
 RUN_PYTHON := $(if $(wildcard $(VENV_DIR)/bin/python),$(VENV_DIR)/bin/python,$(PYTHON))
 RUN_DBT := $(if $(wildcard $(VENV_DIR)/bin/dbt),$(VENV_DIR)/bin/dbt,dbt)
 RUN_STREAMLIT := $(if $(wildcard $(VENV_DIR)/bin/streamlit),$(VENV_DIR)/bin/streamlit,streamlit)
-PYTHON_DIRS := build tests streamlit
+RUN_AIRFLOW := $(if $(wildcard $(VENV_DIR)/bin/airflow),$(VENV_DIR)/bin/airflow,airflow)
+PYTHON_DIRS := airflow build tests streamlit
 DOWNLOAD_ARGS ?=
 START_MONTH ?=
 END_MONTH ?=
@@ -15,8 +16,11 @@ DBT_DUCKDB_PATH ?= $(BUILD_DUCKDB_PATH)
 TLC_DATA_DIR ?= $(CURDIR)/data
 DBT_ARGS ?=
 STREAMLIT_PORT ?= 8501
+AIRFLOW_HOME ?= $(CURDIR)/airflow/.local
+AIRFLOW_VERSION ?= 3.1.2
+AIRFLOW_ENV = AIRFLOW_HOME="$(AIRFLOW_HOME)" AIRFLOW__CORE__DAGS_FOLDER="$(CURDIR)/airflow/dags" AIRFLOW__CORE__LOAD_EXAMPLES=False
 
-.PHONY: venv install check-env bootstrap download-tlc-full download-tlc discover-sources test lint lint-python lint-sql dbt-debug dbt-seed dbt-run dbt-test swap-duckdb streamlit-run ensure-state-dirs
+.PHONY: venv install install-airflow-deps airflow-install airflow-standalone airflow-list-dags airflow-trigger-pipeline check-env bootstrap download-tlc-full download-tlc discover-sources test lint lint-python lint-sql dbt-debug dbt-seed dbt-run dbt-test swap-duckdb streamlit-run ensure-state-dirs
 
 venv:
 	$(PYTHON) -m venv $(VENV_DIR)
@@ -24,6 +28,32 @@ venv:
 install: venv
 	$(VENV_DIR)/bin/pip install --upgrade pip
 	$(VENV_DIR)/bin/pip install -r requirements.txt
+	$(MAKE) install-airflow-deps
+
+install-airflow-deps: venv
+	AIRFLOW_VERSION="$(AIRFLOW_VERSION)"; \
+	PYTHON_VERSION="$$( $(VENV_DIR)/bin/python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' )"; \
+	CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-$${AIRFLOW_VERSION}/constraints-$${PYTHON_VERSION}.txt"; \
+	$(VENV_DIR)/bin/pip install "apache-airflow==$${AIRFLOW_VERSION}" "apache-airflow-providers-standard" --constraint "$${CONSTRAINT_URL}"
+	$(VENV_DIR)/bin/pip install \
+		"click>=8.3,<9" \
+		"protobuf>=6,<7" \
+		"opentelemetry-proto>=1.40,<2" \
+		"opentelemetry-exporter-otlp>=1.40,<2" \
+		"opentelemetry-exporter-otlp-proto-common>=1.40,<2" \
+		"opentelemetry-exporter-otlp-proto-grpc>=1.40,<2" \
+		"opentelemetry-exporter-otlp-proto-http>=1.40,<2"
+
+airflow-install: install-airflow-deps
+
+airflow-standalone: ensure-state-dirs
+	$(AIRFLOW_ENV) $(RUN_AIRFLOW) standalone
+
+airflow-list-dags:
+	$(AIRFLOW_ENV) $(RUN_AIRFLOW) dags list
+
+airflow-trigger-pipeline:
+	$(AIRFLOW_ENV) $(RUN_AIRFLOW) dags trigger nyc_tlc_local_pipeline
 
 check-env:
 	$(RUN_PYTHON) -m build.check_environment

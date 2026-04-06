@@ -1,0 +1,4 @@
+README.md
+include/*
+plugins/*
+__pycache__/*

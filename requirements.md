@@ -7,8 +7,33 @@ This project uses a dedicated DuckDB-focused virtual environment named `.env_duc
 Install the project dependencies with:
 
 ```bash
-pip install -r requirements.txt
+make install
 ```
+
+This single command sets up the demo's full local toolchain inside `.env_duck`:
+
+- dbt + DuckDB
+- Streamlit
+- Python linting and tests
+- Airflow
+
+Under the hood, `make install` installs `requirements.txt` first and then adds
+Airflow with the official constraints-based installation pattern.
+
+Because this demo intentionally keeps Airflow, dbt, and Streamlit in one shared
+environment, `make install` also reapplies a few compatibility pins after the
+Airflow install step:
+
+- `click>=8.3,<9`
+- `protobuf>=6,<7`
+- `opentelemetry-proto>=1.40,<2`
+- `opentelemetry-exporter-otlp>=1.40,<2`
+- `opentelemetry-exporter-otlp-proto-common>=1.40,<2`
+- `opentelemetry-exporter-otlp-proto-grpc>=1.40,<2`
+- `opentelemetry-exporter-otlp-proto-http>=1.40,<2`
+
+Those overrides keep dbt 1.11 and Airflow 3.1 working together in the same
+`.env_duck` environment.
 
 Package summary:
 
@@ -27,6 +52,37 @@ Package summary:
 - `sqlfluff-templater-dbt`: dbt-aware templating support for future dbt models
 - `streamlit`: local dashboard layer for read-only serving against the production DuckDB file
 
+## Airflow
+
+For this demo project, Airflow is intentionally installed into the same
+`.env_duck` environment as dbt, DuckDB, and Streamlit.
+
+Why this repo uses one environment:
+
+- simpler laptop setup
+- easier demo onboarding
+- fewer activation steps while developing locally
+
+In a production-style deployment, keeping Airflow in a separate environment or
+on a separate machine would still be the more conservative choice.
+
+Recommended setup:
+
+```bash
+make install
+```
+
+This installs Airflow into `.env_duck` using the official constraints-based
+installation pattern from the Apache Airflow quick start:
+
+- [Apache Airflow Quick Start](https://airflow.apache.org/docs/apache-airflow/3.1.2/start.html)
+
+Launch the local scheduler, API server, and UI with:
+
+```bash
+make airflow-standalone
+```
+
 ## AWS CLI
 
 AWS CLI is required for the ingestion workflow because the source data lives in AWS-hosted object storage.
@@ -44,13 +100,12 @@ If you do not already have AWS CLI installed, follow the official installer for 
 
 ## Virtual Environment
 
-Recommended setup:
+If you prefer to create the environment manually before using `make`, this also works:
 
 ```bash
 python3 -m venv .env_duck
 source .env_duck/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+make install
 ```
 
 ## Local Quality Checks
